@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int     @id @default(autoincrement())
+  name        String
+  email       String  @unique
+  password    String
+  role        Role
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  products    Product[]
+  carts       Cart[]
+  orders      Order[]
+}
+
+model Category {
+  id           Int    @id @default(autoincrement())
+  name         String
+  description  String
+  image        String
+  products     Product[]
+}
+
+model Product {
+  id              Int     @id @default(autoincrement())
+  category        Category @relation(fields: [category_id], references: [id])
+  category_id     Int
+  user            User @relation(fields: [user_id], references: [id])
+  user_id         Int
+  name           String
+  description    String
+  price         Int
+  discounted_price Int
+  image         String
+}
+
+model Cart {
+  id      Int     @id @default(autoincrement())
+  user    User    @relation(fields: [user_id], references: [id])
+  user_id Int
+  cartItems CartItem[]
+}
+
+model CartItem {
+  id         Int      @id @default(autoincrement())
+  cart       Cart     @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+  cart_id    Int
+  product    Product  @relation(fields: [product_id], references: [id])
+  product_id Int
+}
+
+model Order {
+  id          Int     @id @default(autoincrement())
+  user        User    @relation(fields: [user_id], references: [id])
+  user_id     Int
+  orderItems  OrderItem[]
+  order_status OrderStatus @default(Pending)
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  order      Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  order_id   Int
+  product    Product  @relation(fields: [product_id], references: [id])
+  product_id Int
+}
+
+enum Role {
+  SELLER
+  BUYER
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  CANCELLED
+}
