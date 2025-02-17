@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 const featuredProducts = [
-  { id: 1, name: "Homemade Mango Pickle", price: 9.99, image: "/placeholder.svg?height=200&width=200" },
-  { id: 2, name: "Spicy Garlic Papad", price: 4.99, image: "/placeholder.svg?height=200&width=200" },
-  { id: 3, name: "Traditional Lemon Pickle", price: 7.99, image: "/placeholder.svg?height=200&width=200" },
-  { id: 4, name: "Crispy Masala Papad", price: 5.99, image: "/placeholder.svg?height=200&width=200" },
+  { id: 1, name: "Homemade Mango Pickle", price: 9.99, image: "/placeholder.jpg" },
+  { id: 2, name: "Spicy Garlic Papad", price: 4.99, image: "/placeholder.jpg" },
+  { id: 3, name: "Traditional Lemon Pickle", price: 7.99, image: "/placeholder.jpg" },
+  { id: 4, name: "Crispy Masala Papad", price: 5.99, image: "/placeholder.jpg" },
 ]
 
 export default function Home() {
