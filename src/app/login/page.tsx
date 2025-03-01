@@ -29,7 +29,12 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input
+                id="email"
+                type="email"
+                placeholder="abc@gmail.com"
+                value={email} onChange={(e) => setEmail(e.target.value)}
+                required />
             </div>
             <div className="mb-4">
               <Label htmlFor="password">Password</Label>
@@ -38,6 +43,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="********"
                 required
               />
             </div>
@@ -49,7 +55,7 @@ export default function LoginPage() {
         <CardFooter className="flex justify-center">
           <p>
             Don't have an account?{" "}
-            <Link href="/signup" className="text-primary hover:underline">
+            <Link href="/register" className="text-primary hover:underline">
               Sign up
             </Link>
           </p>

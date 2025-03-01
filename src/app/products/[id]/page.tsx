@@ -6,13 +6,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Star, ShoppingCart } from "lucide-react"
+import App from "next/app"
+import { useDispatch } from "react-redux"
+import { AppDispatch } from "@/lib/redux/store"
+import { addToCart } from "@/lib/redux/slices/cartSlice"
 
 // This is a mock product. In a real app, you'd fetch this data from your API
 const product = {
   id: 1,
   name: "Homemade Mango Pickle",
   price: 9.99,
-  image: "/placeholder.svg?height=400&width=400",
+  image: "/placeholder.jpg",
   seller: "Aarti's Kitchen",
   description:
     "A delicious, tangy mango pickle made with love using a traditional family recipe. Perfect accompaniment for your meals.",
@@ -22,6 +26,10 @@ const product = {
 
 export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
+  const dispatch = useDispatch<AppDispatch>();
+  const handleAddToCart = () => {
+    dispatch(addToCart(product));
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -57,7 +65,7 @@ export default function ProductDetailPage() {
               onChange={(e) => setQuantity(Number.parseInt(e.target.value))}
               className="w-20 mr-4"
             />
-            <Button size="lg">
+            <Button size="lg" onClick={() => handleAddToCart()}>
               <ShoppingCart className="w-5 h-5 mr-2" />
               Add to Cart
             </Button>

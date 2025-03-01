@@ -11,12 +11,19 @@ import ProductCard from "@/app/components/common/ProductCard"
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>()
   const { items: products, status, error } = useSelector((state: RootState) => state.products)
+  // console.log("products", products);
 
-  useEffect(() => {
-    if (status === "idle") {
-      dispatch(fetchProducts())
-    }
-  }, [status, dispatch])
+  const featuredProducts = [
+    { id: 1, name: "Homemade Mango Pickle", price: 9.99, image: "/placeholder.jpg", seller: "Seller A", description: "Delicious homemade mango pickle." },
+    { id: 2, name: "Spicy Garlic Papad", price: 4.99, image: "/placeholder.jpg", seller: "Seller B", description: "Crispy and spicy garlic papad." },
+    { id: 3, name: "Traditional Lemon Pickle", price: 7.99, image: "/placeholder.jpg", seller: "Seller C", description: "Traditional lemon pickle with authentic taste." },
+    { id: 4, name: "Crispy Masala Papad", price: 5.99, image: "/placeholder.jpg", seller: "Seller D", description: "Crispy papad with a blend of spices." },
+  ]
+  // useEffect(() => {
+  //   if (status === "idle") {
+  //     dispatch(fetchProducts())
+  //   }
+  // }, [status, dispatch])
 
   if (status === "loading") {
     return <div>Loading...</div>
@@ -46,7 +53,7 @@ export default function ProductsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {products.map((product) => (
+        {featuredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>

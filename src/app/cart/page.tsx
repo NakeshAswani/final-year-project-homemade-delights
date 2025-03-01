@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
+import { clearCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
 import type { RootState, AppDispatch } from "@/lib/redux/store"
 import { Minus, Plus } from "lucide-react"
 
@@ -42,7 +42,11 @@ export default function CartPage() {
                 <TableHead>Price</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Total</TableHead>
-                <TableHead></TableHead>
+                <TableHead>
+                  <Button variant='ghost' className="hover:bg-red-500" onClick={() => dispatch(clearCart())}>
+                    Clear Cart
+                  </Button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -82,7 +86,7 @@ export default function CartPage() {
                   </TableCell>
                   <TableCell>${(item.price * item.quantity).toFixed(2)}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" onClick={() => dispatch(removeFromCart(item.id))}>
+                    <Button variant='ghost' className="hover:bg-red-500" onClick={() => dispatch(removeFromCart(item.id))}>
                       Remove
                     </Button>
                   </TableCell>

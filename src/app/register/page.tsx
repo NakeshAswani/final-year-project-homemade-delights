@@ -23,7 +23,7 @@ export default function RegisterPage() {
     <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-screen">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Registed</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Register</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
@@ -33,6 +33,7 @@ export default function RegisterPage() {
                 id="email"
                 type="email"
                 value={email}
+                placeholder="abc@gmail.com"
                 onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="mb-4">
@@ -40,6 +41,7 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -52,9 +54,9 @@ export default function RegisterPage() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p>
-            Don't have an account?{" "}
-            <Link href="/signup" className="text-primary hover:underline">
-              Sign up
+            Already have an accoutn?{" "}
+            <Link href="/login" className="text-primary hover:underline">
+              Sign In
             </Link>
           </p>
         </CardFooter>
