@@ -12,12 +12,25 @@ import { AppDispatch } from "@/lib/redux/store"
 import { addToCart } from "@/lib/redux/slices/cartSlice"
 
 // This is a mock product. In a real app, you'd fetch this data from your API
-const product = {
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  seller: string;
+  quantity: number;
+  description: string;
+  rating: number;
+  reviews: number;
+}
+
+const product: Product = {
   id: 1,
   name: "Homemade Mango Pickle",
   price: 9.99,
   image: "/placeholder.jpg",
   seller: "Aarti's Kitchen",
+  quantity: 1,
   description:
     "A delicious, tangy mango pickle made with love using a traditional family recipe. Perfect accompaniment for your meals.",
   rating: 4.5,
@@ -28,7 +41,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const dispatch = useDispatch<AppDispatch>();
   const handleAddToCart = () => {
-    dispatch(addToCart(product));
+    dispatch(addToCart({ product, quantity }));
   }
 
   return (

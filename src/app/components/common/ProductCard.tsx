@@ -17,7 +17,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const cartItem = useSelector((state: RootState) => state.cart.items.find((item) => item.id === product.id))
 
   const handleAddToCart = () => {
-    dispatch(addToCart(product))
+    dispatch(addToCart({ product, quantity: 1 }))
   }
 
   const handleRemoveFromCart = () => {

@@ -43,9 +43,9 @@ export default function Home() {
         <h2 className="text-3xl font-semibold mb-6">Featured Products</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {featuredProducts.map((product) => (
-            <Link href={`/products/${product.id}`} key={product.id}>
-              <Card key={product.id}>
-                <CardHeader>
+            <Card key={product.id}>
+              <CardHeader>
+                <Link href={`/products/${product.id}`} key={product.id}>
                   <Image
                     src={product.image || "/placeholder.svg"}
                     alt={product.name}
@@ -53,16 +53,16 @@ export default function Home() {
                     height={200}
                     className="w-full h-48 object-cover rounded-t-lg"
                   />
-                </CardHeader>
-                <CardContent>
-                  <CardTitle>{product.name}</CardTitle>
-                  <p className="text-muted-foreground">${product.price.toFixed(2)}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" onClick={() => handleAddToCart(product)}>Add to Cart</Button>
-                </CardFooter>
-              </Card>
-            </Link>
+                </Link>
+              </CardHeader>
+              <CardContent>
+                <CardTitle>{product.name}</CardTitle>
+                <p className="text-muted-foreground">${product.price.toFixed(2)}</p>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" onClick={() => handleAddToCart(product)}>Add to Cart</Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       </section>
