@@ -19,7 +19,7 @@ export default function Home() {
   // const cartItems = useSelector((state: RootState) => state.cart.items)
   const handleAddToCart = (product: any) => {
     console.log(product);
-    dispatch(addToCart(product));
+    dispatch(addToCart({ product, quantity: 1 }));
   }
   return (
     <div className="container mx-auto px-4 py-8">
