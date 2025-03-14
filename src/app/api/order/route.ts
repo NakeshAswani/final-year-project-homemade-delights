@@ -1,11 +1,70 @@
+import dotenv from "dotenv";
+dotenv.config();
 import { PrismaClient, OrderStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
+const token_verification = async (token: string | null, user_id: number | null) => {
+    if (!token) {
+        return NextResponse.json({
+            status: 401,
+            error: "Unauthorized"
+        });
+    }
+    if (!user_id) {
+        return NextResponse.json({
+            status: 400,
+            error: "User id is required"
+        });
+    }
+    if (!process.env.JWT_TOKEN_KEY) {
+        throw new Error("JWT_TOKEN_KEY is not defined in environment variables");
+    }
+    try {
+        jwt.verify(token, process.env.JWT_TOKEN_KEY);
+    }
+    catch (error: any) {
+        return NextResponse.json({
+            status: 403,
+            error: "Token Not Verified!"
+        });
+    }
+    const decodedToken: any = jwt.decode(token!);
+    if (decodedToken.id !== user_id) {
+        return NextResponse.json({
+            status: 403,
+            error: "Forbidden: Token does not belong to the current user"
+        });
+    }
+}
+
 export const POST = async (request: NextRequest) => {
     try {
-        const user_id = await Number(request.nextUrl.searchParams.get("user_id"));
+        const user_id = Number(request.nextUrl.searchParams.get("user_id"));
+        const address_id = Number(request.nextUrl.searchParams.get("address_id"));
+        const token = request.headers.get('token');
+        const tokenResponse = await token_verification(token, user_id);
+        if (tokenResponse) return tokenResponse;
+
+        const address = await prisma.address.findUnique({
+            where: { id: address_id }
+        });
+
+        if (!address) {
+            return NextResponse.json({
+                status: 400,
+                error: "Address not found"
+            });
+        }
+
+        if (address.user_id !== user_id) {
+            return NextResponse.json({
+                status: 403,
+                error: "Forbidden: Address does not belong to the current user"
+            });
+        }
 
         const cart = await prisma.cart.findFirst({
             where: { user_id, user: { is_active: true } },
@@ -20,7 +79,7 @@ export const POST = async (request: NextRequest) => {
         }
 
         const order = await prisma.order.create({
-            data: { user_id }
+            data: { user_id, address_id }
         });
         const orderItems = cart.cartItems.map((item) => ({
             order_id: order.id, product_id: item.product_id, quantity: item.quantity
@@ -60,9 +119,13 @@ export const POST = async (request: NextRequest) => {
 
 export const GET = async (request: NextRequest) => {
     try {
-        const user_id = await Number(request.nextUrl.searchParams.get("user_id"));
+        const user_id = Number(request.nextUrl.searchParams.get("user_id"));
 
         if (user_id) {
+            const token = request.headers.get('token');
+            const tokenResponse = await token_verification(token, user_id);
+            if (tokenResponse) return tokenResponse;
+
             const orders = await prisma.order.findMany({
                 where: { user_id },
                 include: {
@@ -98,6 +161,8 @@ export const GET = async (request: NextRequest) => {
 
 export const PUT = async (request: NextRequest) => {
     try {
+        const token = request.headers.get('token');
+
         const { order_id, status } = await request.json() as { order_id: string, status: OrderStatus };
 
         const order = await prisma.order.findFirst({
@@ -111,6 +176,9 @@ export const PUT = async (request: NextRequest) => {
                 error: "Order not found"
             });
         }
+
+        const tokenResponse = await token_verification(token, order.user_id);
+        if (tokenResponse) return tokenResponse;
 
         if (status === "CANCELLED" && (order.order_status === "APPROVED" || order.order_status === "PENDING")) {
             await prisma.order.update({
