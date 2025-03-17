@@ -6,6 +6,7 @@ import Footer from "@/app/components/common/Footer"
 import './globals.css'
 import { StoreProvider } from "@/lib/redux/StoreProvider"
 import { ThemeProvider } from "@/lib/theme-provider"
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,10 +21,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning={true}>
+      <body className={`${inter.className} font-mono`}>
         <ThemeProvider>
           <StoreProvider>
+            <Toaster />
             <Header />
             <main className="min-h-screen">{children}</main>
             <Footer />

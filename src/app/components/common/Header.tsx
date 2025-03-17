@@ -1,18 +1,25 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useState } from "react"
-import { useSelector } from "react-redux"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { ShoppingCart, Menu, X } from "lucide-react"
-import type { RootState } from "@/lib/redux/store"
+import Link from "next/link";
+import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart, Menu, X } from "lucide-react";
+import type { RootState, AppDispatch } from "@/lib/redux/store";
+import { setSearchQuery } from "@/lib/redux/slices/productsSlice";
 
 export default function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const dispatch = useDispatch<AppDispatch>();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const searchQuery = useSelector((state: RootState) => state.products.searchQuery);
   const cartItemCount = useSelector((state: RootState) =>
-    state.cart.items.reduce((sum, item) => sum + item.quantity, 0),
-  )
+    state.cart.items.reduce((sum, item) => sum + item.quantity, 0)
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchQuery(e.target.value));
+  };
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md">
@@ -21,17 +28,24 @@ export default function Header() {
           HomeMade Delights
         </Link>
         <div className="hidden md:flex items-center space-x-4">
-          <Input type="search" placeholder="Search products..." className="w-64" />
+          {/* Search Bar */}
+          <Input
+            type="search"
+            placeholder="Search products"
+            className="w-64 text-black"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
           <nav>
             <ul className="flex space-x-4">
               <li>
                 <Link href="/products">Products</Link>
               </li>
               <li>
-                <Link href="/login">Login</Link>
+                <Link href="/signin">Login</Link>
               </li>
               <li>
-                <Link href="/register">Register</Link>
+                <Link href="/signup">Register</Link>
               </li>
             </ul>
           </nav>
@@ -46,14 +60,26 @@ export default function Header() {
             </Button>
           </Link>
         </div>
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
           {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>
       </div>
+      
       {isMenuOpen && (
         <div className="md:hidden">
           <nav className="px-4 pt-2 pb-4 space-y-2">
-            <Input type="search" placeholder="Search products..." className="w-full mb-2" />
+            <Input
+              type="search"
+              placeholder="Search products"
+              className="w-full mb-2 text-black"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
             <ul className="space-y-2">
               <li>
                 <Link href="/products" className="block">
@@ -61,7 +87,7 @@ export default function Header() {
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="block">
+                <Link href="/signin" className="block">
                   Login
                 </Link>
               </li>
@@ -80,6 +106,5 @@ export default function Header() {
         </div>
       )}
     </header>
-  )
+  );
 }
-
