@@ -17,6 +17,7 @@ model User {
   addresses  Address[]
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
+  categories Category[]
   products   Product[]
   carts      Cart[]
   orders     Order[]
@@ -36,6 +37,8 @@ model Address {
 
 model Category {
   id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [user_id], references: [id])
+  user_id     Int
   name        String
   description String
   image       String
