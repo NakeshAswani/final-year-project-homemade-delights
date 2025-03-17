@@ -3,6 +3,7 @@ dotenv.config();
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { handleResponse } from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
@@ -15,53 +16,36 @@ export const POST = async (request: NextRequest) => {
         });
 
         if (!user) {
-            return NextResponse.json({
-                status: 404,
-                error: "User not found"
-            });
+            return handleResponse(404, "User not found");
         }
 
         if (!user.is_active) {
-            return NextResponse.json({
-                status: 403,
-                message: "User is deactivate do you want to activate it?",
-                data: user
-            });
+            return handleResponse(403, "User is deactivated. Do you want to activate it?");
         }
 
         if (!process.env.JWT_TOKEN_KEY) {
             throw new Error("JWT_TOKEN_KEY is not defined in environment variables");
         }
-        const token = jwt.sign(user, process.env.JWT_TOKEN_KEY, { expiresIn: "30d" });
 
-        return NextResponse.json({
-            status: 200,
-            message: "User logged in successfully",
-            data: user,
-            token: token
-        });
+        const token = jwt.sign(user, process.env.JWT_TOKEN_KEY, { expiresIn: "365d" });
+
+        return handleResponse(200, "User logged in successfully", { ...user, token });
     }
     catch (error: any) {
-        return NextResponse.json({
-            status: 500,
-            error: error.message
-        });
+        return handleResponse(500, error.message);
     }
-}
+};
 
 export const PATCH = async (request: NextRequest) => {
     try {
-        const id = Number(request.nextUrl.searchParams.get('id'));
+        const id = Number(request.nextUrl.searchParams.get("id"));
 
         let user = await prisma.user.findUnique({
             where: { id }
         });
 
         if (!user) {
-            return NextResponse.json({
-                status: 404,
-                error: "User not found"
-            });
+            return handleResponse(404, "User not found");
         }
 
         user = await prisma.user.update({
@@ -74,18 +58,9 @@ export const PATCH = async (request: NextRequest) => {
         }
 
         const token = jwt.sign(user, process.env.JWT_TOKEN_KEY, { expiresIn: "30d" });
-
-        return NextResponse.json({
-            status: 200,
-            message: "User Activated successfully",
-            data: user,
-            token: token
-        });
+        return handleResponse(200, "User activated successfully", { ...user, token });
     }
     catch (error: any) {
-        return NextResponse.json({
-            status: 500,
-            error: error.message
-        });
+        return handleResponse(500, error.message);
     }
-}
+};

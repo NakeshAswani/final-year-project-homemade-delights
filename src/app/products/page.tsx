@@ -8,6 +8,7 @@ import { fetchProducts, setSearchQuery, setSortOrder } from "@/lib/redux/slices/
 import type { AppDispatch, RootState } from "@/lib/redux/store";
 import ProductCard from "@/app/components/common/ProductCard";
 import { Loader2 } from "lucide-react";
+import Loader from "../components/common/Loader";
 
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -16,7 +17,7 @@ export default function ProductsPage() {
   );
 
   useEffect(() => {
-    dispatch(fetchProducts());
+    !products?.length ? dispatch(fetchProducts()) : null;
   }, [dispatch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,11 +47,7 @@ export default function ProductsPage() {
     }) : [];
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center bg-gray-100 w-full h-screen">
-        <Loader2 className="animate-spin h-16 w-16 text-gray-950" />
-      </div>
-    );
+    return <Loader />
   }
 
   return (
@@ -80,7 +77,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredProducts.length ? (
           filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)
         ) : (

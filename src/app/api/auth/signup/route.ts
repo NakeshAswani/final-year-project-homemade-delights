@@ -1,5 +1,6 @@
+import { handleResponse } from "@/lib/utils";
 import { PrismaClient, Role } from "@prisma/client";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 const prisma = new PrismaClient();
 
@@ -10,16 +11,9 @@ export const POST = async (request: NextRequest) => {
         await prisma.user.create({
             data: { name, email, password, role }
         });
-
-        return NextResponse.json({
-            status: 201,
-            message: "User created successfully"
-        });
+        return handleResponse(200, "User created successfully");
     }
     catch (error: any) {
-        return NextResponse.json({
-            status: 500,
-            error: error.message
-        });
+        return handleResponse(500, error.message);
     }
-}
+};

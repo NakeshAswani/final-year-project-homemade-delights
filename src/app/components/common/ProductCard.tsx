@@ -5,23 +5,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { addToCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
 import type { AppDispatch, RootState } from "@/lib/redux/store"
-import type { Product } from "@/lib/redux/slices/productsSlice"
 import { Minus, Plus } from "lucide-react"
+import { IProduct } from "@/lib/interfaces"
 
-interface ProductCardProps {
-  product: Product
-}
-
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product }: { product: IProduct }) {
   const dispatch = useDispatch<AppDispatch>()
   const cartItem = useSelector((state: RootState) => state.cart.items.find((item) => item.id === product.id))
 
   const handleAddToCart = () => {
     dispatch(addToCart({ product, quantity: 1 }))
-  }
-
-  const handleRemoveFromCart = () => {
-    dispatch(removeFromCart(product.id))
   }
 
   const handleUpdateQuantity = (newQuantity: number) => {
@@ -44,16 +36,16 @@ export default function ProductCard({ product }: ProductCardProps) {
         />
       </CardHeader>
       <CardContent>
-        <CardTitle>{product.name}</CardTitle>
-        <p className="text-muted-foreground">${product.price.toFixed(2)}</p>
-        <p className="text-sm text-muted-foreground">Seller: {product.seller}</p>
+        <CardTitle className="capitalize">{product.name}</CardTitle>
+        <p className="text-muted-foreground mt-1">₹{product.price.toFixed(2)}</p>
+        <p className="text-sm text-muted-foreground mt-2 capitalize">Seller: {product.user.name}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" asChild>
           <Link href={`/products/${product.id}`}>View Details</Link>
         </Button>
         {cartItem ? (
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => handleUpdateQuantity(cartItem.quantity - 1)}>
               <Minus className="h-4 w-4" />
             </Button>

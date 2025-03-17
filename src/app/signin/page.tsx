@@ -1,25 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { loginUser } from "@/lib/redux/slices/authSlice";
-import { AppDispatch } from "@/lib/redux/store";
+import { AppDispatch, RootState } from "@/lib/redux/store";
 import { useRouter } from "next/navigation";
 import toast from 'react-hot-toast';
+import Loader from "../components/common/Loader";
+import { PasswordInput } from "../components/inputs/PasswordInput";
 
 export default function LoginPage() {
-  const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [checkUserExistsLoader, setCheckUserExistsLoader] = useState(true)
+  const user = useSelector((state: RootState) => state.auth.user)
+  const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +31,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await dispatch(loginUser({ email, password })).unwrap();
+      const res = await dispatch(loginUser({ email, password })).unwrap();
       router.push("/"); // Redirect after login success
     } catch (err: any) {
       toast.error("Login failed!");
@@ -36,6 +40,18 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      router.replace("/") // Redirect if user is logged in
+    } else {
+      setCheckUserExistsLoader(false) // Stop loader if no user is found
+    }
+  }, [user])
+
+  if (checkUserExistsLoader) {
+    return <Loader />
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-screen">
@@ -59,14 +75,12 @@ export default function LoginPage() {
             </div>
             <div className="mb-4">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="********"
-                required
-              />
+                required />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
@@ -76,7 +90,7 @@ export default function LoginPage() {
         <CardFooter className="flex justify-center">
           <p>
             Don't have an account?{" "}
-            <Link href="/signup" className="text-primary hover:underline">
+            <Link href="/signup" className="text-blue-500 hover:underline">
               Sign up
             </Link>
           </p>

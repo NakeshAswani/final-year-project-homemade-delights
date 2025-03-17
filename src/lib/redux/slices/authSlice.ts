@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axiosInstance";
 import Cookies from "js-cookie";
-import { AuthState, User } from "@/lib/interfaces";
+import { AuthState, IUser } from "@/lib/interfaces";
 
 const storedUser = Cookies.get("user");
 const initialState: AuthState = {
@@ -16,12 +16,12 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post("/auth/signin", { email, password });
-      const userData: User = response.data;
-      
-      // **Save user & token in cookies**
-      Cookies.set("user", JSON.stringify(userData), { expires: 7 }); // Store for 7 days
+      const loginData: IUser = response.data;
 
-      return userData;
+      // **Save user & token in cookies**
+      Cookies.set("user", JSON.stringify(loginData), { expires: 365 });
+
+      return loginData;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Login failed");
     }
@@ -36,6 +36,9 @@ const authSlice = createSlice({
       state.user = null;
       Cookies.remove("user");
     },
+    setUser: (state, action) => {
+      state.user = action.payload
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -43,7 +46,7 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action: PayloadAction<User>) => {
+      .addCase(loginUser.fulfilled, (state, action: PayloadAction<IUser>) => {
         state.loading = false;
         state.user = action.payload;
       })
@@ -54,5 +57,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logoutUser } = authSlice.actions;
+export const { logoutUser, setUser } = authSlice.actions;
 export default authSlice.reducer;

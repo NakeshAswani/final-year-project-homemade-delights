@@ -1,22 +1,22 @@
 import axiosInstance from "@/lib/axiosInstance";
-import { Product, ProductsState } from "@/lib/interfaces";
+import { IProduct, ProductsState } from "@/lib/interfaces";
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 
 const initialState: ProductsState = {
   items: [],
-  loading: false,
+  loading: true,
   error: null,
   searchQuery: "",
   sortOrder: "",
 };
 
 // Async thunk to fetch products
-export const fetchProducts = createAsyncThunk<Product[], void, { rejectValue: string }>(
+export const fetchProducts = createAsyncThunk<IProduct[], void, { rejectValue: string }>(
   "products/fetchProducts",
   async (_, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get("/product");
-      return response.data;
+      return response.data?.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch products");
     }
@@ -40,7 +40,7 @@ const productsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
+      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<IProduct[]>) => {
         state.loading = false;
         state.items = action.payload;
       })
