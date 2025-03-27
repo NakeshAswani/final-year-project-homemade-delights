@@ -9,55 +9,30 @@ import { Star, ShoppingCart } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "@/lib/redux/store"
 import { addToCart } from "@/lib/redux/slices/cartSlice"
-import { loginUser } from "@/lib/redux/slices/authSlice"
-import { log } from "console"
-import { IProduct } from "@/lib/interfaces"
-import { fetchProduct } from "@/lib/redux/slices/productsSlice"
+import { fetchSingleProduct } from "@/lib/redux/slices/productsSlice"
 import { useParams } from "next/navigation"
-
-// This is a mock product. In a real app, you'd fetch this data from your API
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  image: string;
-  seller: string;
-  quantity: number;
-  description: string;
-  rating: number;
-  reviews: number;
-}
-
-const product: Product = {
-  id: 1,
-  name: "Homemade Mango Pickle",
-  price: 9.99,
-  image: "/placeholder.jpg",
-  seller: "Aarti's Kitchen",
-  quantity: 1,
-  description:
-    "A delicious, tangy mango pickle made with love using a traditional family recipe. Perfect accompaniment for your meals.",
-  rating: 4.5,
-  reviews: 28,
-}
 
 export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const dispatch = useDispatch<AppDispatch>();
-  let user = [];
   const id = Number(useParams().id);
-  // console.log('id:', id);
-  const loginData = useSelector((state: RootState) => state.auth.user);
 
-  // fetch single product
+  // Fetch product data
   useEffect(() => {
-    dispatch(fetchProduct(id));
-  }, [dispatch]);
+    dispatch(fetchSingleProduct(id));
+  }, [dispatch, id]);
 
+  // Get product data from Redux store
+  const product = useSelector((state: RootState) => state.products.items.find((item) => item.id === id));
 
   const handleAddToCart = () => {
-    // let product={...product,loginData};
-    dispatch(addToCart({ product, quantity }));
+    if (product) {
+      dispatch(addToCart({ product, quantity }));
+    }
+  }
+
+  if (!product) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -74,15 +49,15 @@ export default function ProductDetailPage() {
         </div>
         <div>
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-          <p className="text-xl text-muted-foreground mb-4">by {product.seller}</p>
+          <p className="text-xl text-muted-foreground mb-4">by {product?.user.name}</p>
           <div className="flex items-center mb-4">
-            {[...Array(5)].map((_, i) => (
+            {/* {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
                 className={`w-5 h-5 ${i < Math.floor(product.rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
               />
             ))}
-            <span className="ml-2 text-muted-foreground">({product.reviews} reviews)</span>
+            <span className="ml-2 text-muted-foreground">({product.reviews} reviews)</span> */}
           </div>
           <p className="text-2xl font-bold mb-4">${product.price.toFixed(2)}</p>
           <p className="mb-6">{product.description}</p>

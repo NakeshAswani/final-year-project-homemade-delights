@@ -5,8 +5,10 @@ import { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { ShoppingCart, Menu, X, LogOut } from "lucide-react";
 import type { RootState, AppDispatch } from "@/lib/redux/store";
+import logo from "../../../../public/Logo.png";
 import { logoutUser } from "@/lib/redux/slices/authSlice"; // Import logout action
 import Loader from "./Loader";
 
@@ -68,7 +70,19 @@ export default function Header() {
   return (
     <header className="bg-primary text-primary-foreground shadow-md">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="text-2xl font-bold" onClick={() => setIsMenuOpen(false)}>HomeMade Delights</Link>
+        <Link href="/" className="text-2xl font-bold" onClick={() => setIsMenuOpen(false)}>
+          <div className="flex justify-content-center items-center gap-2">
+            <Image
+              src={logo}
+              alt="HomeMade Delights"
+              width={70}
+              height={70}
+            />
+            <span>
+              HomeMade Delights
+            </span>
+          </div>
+        </Link>
         <div className="hidden md:flex items-center space-x-6">
           <nav>{navigation}</nav>
           <Link href="/cart" onClick={() => setIsMenuOpen(false)}>

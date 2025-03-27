@@ -24,15 +24,13 @@ export const fetchProducts = createAsyncThunk<IProduct[], void, { rejectValue: s
 );
 
 // Async thunk to fetch single product
-export const fetchProduct = createAsyncThunk<IProduct, number, { rejectValue: string }>(
-  "products/fetchProduct",
+export const fetchSingleProduct = createAsyncThunk<IProduct, number, { rejectValue: string }>(
+  "products/fetchSingleProduct",
   async (id, { rejectWithValue }) => {
     // console.log('id:', id);
     try {
-      console.log('Fetching product with ID:', id); // Log the ID
-      const response = await axiosInstance.get(`/product/${id}`);
-      console.log('Request URL:', `/product/${id}`); // Log the request URL
-      console.log('Response:', response.data); // Log the response
+      const response = await axiosInstance.get(`/product?id=${id}`);
+      console.log('single product:', response.data?.data);
       return response.data?.data;
     } catch (error: any) {
       console.error('Error fetching product:', error.response?.data); // Log the error
