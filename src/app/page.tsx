@@ -1,26 +1,25 @@
-'use client'
-import Link from "next/link"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useDispatch, useSelector } from "react-redux"
-import { AppDispatch, RootState } from "@/lib/redux/store"
-import { addToCart } from "@/lib/redux/slices/cartSlice"
-
-const featuredProducts = [
-  { id: 1, name: "Homemade Mango Pickle", price: 9.99, image: "/placeholder.jpg" },
-  { id: 2, name: "Spicy Garlic Papad", price: 4.99, image: "/placeholder.jpg" },
-  { id: 3, name: "Traditional Lemon Pickle", price: 7.99, image: "/placeholder.jpg" },
-  { id: 4, name: "Crispy Masala Papad", price: 5.99, image: "/placeholder.jpg" },
-]
+"use client";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/lib/redux/store";
+import { fetchProducts } from "@/lib/redux/slices/productsSlice";
+import { useEffect } from "react";
+import Loader from "./components/common/Loader";
+import ProductCard from "./components/common/ProductCard";
 
 export default function Home() {
-  const dispatch = useDispatch<AppDispatch>()
-  // const cartItems = useSelector((state: RootState) => state.cart.items)
-  const handleAddToCart = (product: any) => {
-    console.log(product);
-    dispatch(addToCart({ product, quantity: 1 }));
+  const dispatch = useDispatch<AppDispatch>();
+  const { items: products, loading, error } = useSelector((state: RootState) => state.products);
+
+  useEffect(() => {
+    !products?.length ? dispatch(fetchProducts()) : null;
+  }, [dispatch]);
+
+  if (loading) {
+    return <Loader />
   }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <section className="mb-12">
@@ -41,32 +40,16 @@ export default function Home() {
 
       <section>
         <h2 className="text-3xl font-semibold mb-6">Featured Products</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredProducts.map((product) => (
-            <Card key={product.id}>
-              <CardHeader>
-                <Link href={`/products/${product.id}`} key={product.id}>
-                  <Image
-                    src={product.image || "/placeholder.svg"}
-                    alt={product.name}
-                    width={200}
-                    height={200}
-                    className="w-full h-48 object-cover rounded-t-lg"
-                  />
-                </Link>
-              </CardHeader>
-              <CardContent>
-                <CardTitle>{product.name}</CardTitle>
-                <p className="text-muted-foreground">${product.price.toFixed(2)}</p>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" onClick={() => handleAddToCart(product)}>Add to Cart</Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        {
+          products?.length ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : <div className="text-xl">Out Of Stock! Sorry For The Inconvenience...</div>
+        }
       </section>
     </div>
-  )
+  );
 }
-

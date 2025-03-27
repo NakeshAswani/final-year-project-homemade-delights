@@ -1,15 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Star, ShoppingCart } from "lucide-react"
-import App from "next/app"
-import { useDispatch } from "react-redux"
-import { AppDispatch } from "@/lib/redux/store"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "@/lib/redux/store"
 import { addToCart } from "@/lib/redux/slices/cartSlice"
+import { loginUser } from "@/lib/redux/slices/authSlice"
+import { log } from "console"
+import { IProduct } from "@/lib/interfaces"
+import { fetchProduct } from "@/lib/redux/slices/productsSlice"
+import { useParams } from "next/navigation"
 
 // This is a mock product. In a real app, you'd fetch this data from your API
 interface Product {
@@ -40,7 +44,19 @@ const product: Product = {
 export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const dispatch = useDispatch<AppDispatch>();
+  let user = [];
+  const id = Number(useParams().id);
+  // console.log('id:', id);
+  const loginData = useSelector((state: RootState) => state.auth.user);
+
+  // fetch single product
+  useEffect(() => {
+    dispatch(fetchProduct(id));
+  }, [dispatch]);
+
+
   const handleAddToCart = () => {
+    // let product={...product,loginData};
     dispatch(addToCart({ product, quantity }));
   }
 

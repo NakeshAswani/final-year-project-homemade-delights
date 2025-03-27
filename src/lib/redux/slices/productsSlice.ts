@@ -1,52 +1,73 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
-import type { PayloadAction } from "@reduxjs/toolkit"
-
-export interface Product {
-  id: number
-  name: string
-  price: number
-  image: string
-  seller: string
-  description: string
-}
-
-interface ProductsState {
-  items: Product[]
-  status: "idle" | "loading" | "succeeded" | "failed"
-  error: string | null
-}
+import axiosInstance from "@/lib/axiosInstance";
+import { IProduct, ProductsState } from "@/lib/interfaces";
+import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 
 const initialState: ProductsState = {
   items: [],
-  status: "idle",
+  loading: true,
   error: null,
-}
+  searchQuery: "",
+  sortOrder: "",
+};
 
-export const fetchProducts = createAsyncThunk("products/fetchProducts", async () => {
-  // Replace this with your actual API call
-  const response = await fetch("https://api.example.com/products")
-  return response.json()
-})
+// Async thunk to fetch products
+export const fetchProducts = createAsyncThunk<IProduct[], void, { rejectValue: string }>(
+  "products/fetchProducts",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get("/product");
+      return response.data?.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch products");
+    }
+  }
+);
+
+// Async thunk to fetch single product
+export const fetchProduct = createAsyncThunk<IProduct, number, { rejectValue: string }>(
+  "products/fetchProduct",
+  async (id, { rejectWithValue }) => {
+    // console.log('id:', id);
+    try {
+      console.log('Fetching product with ID:', id); // Log the ID
+      const response = await axiosInstance.get(`/product/${id}`);
+      console.log('Request URL:', `/product/${id}`); // Log the request URL
+      console.log('Response:', response.data); // Log the response
+      return response.data?.data;
+    } catch (error: any) {
+      console.error('Error fetching product:', error.response?.data); // Log the error
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch product");
+    }
+  }
+);
 
 const productsSlice = createSlice({
   name: "products",
   initialState,
-  reducers: {},
+  reducers: {
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
+    },
+    setSortOrder: (state, action: PayloadAction<string>) => {
+      state.sortOrder = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchProducts.pending, (state) => {
-        state.status = "loading"
+        state.loading = true;
+        state.error = null;
       })
-      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
-        state.status = "succeeded"
-        state.items = action.payload
+      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<IProduct[]>) => {
+        state.loading = false;
+        state.items = action.payload;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Something went wrong"
-      })
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
-})
+});
 
-export default productsSlice.reducer
-
+export const { setSearchQuery, setSortOrder } = productsSlice.actions;
+export default productsSlice.reducer;

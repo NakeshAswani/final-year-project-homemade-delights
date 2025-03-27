@@ -30,13 +30,13 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
             <ul className="space-y-2">
               <li>Email: info@homemadedelights.com</li>
-              <li>Phone: +1 (555) 123-4567</li>
-              <li>Address: 123 Main St, Anytown, USA</li>
+              <li>Phone: +91 5551234567</li>
+              <li>Address: 123 Main St, Anytown, India</li>
             </ul>
           </div>
         </div>
         <div className="mt-8 text-center">
-          <p>&copy; 2023 HomeMade Delights. All rights reserved.</p>
+          <p>&copy; 2025 HomeMade Delights. All rights reserved.</p>
         </div>
       </div>
     </footer>
