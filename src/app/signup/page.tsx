@@ -9,13 +9,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import toast from "react-hot-toast";
-import { useSelector } from "react-redux";
-import { RootState } from "@/lib/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/lib/redux/store";
 import Loader from "../components/common/Loader";
 import { PasswordInput } from "../components/inputs/PasswordInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { addCart } from "@/lib/redux/slices/cartSlice";
 
 export default function RegisterPage() {
+  const dispatch = useDispatch<AppDispatch>();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +52,7 @@ export default function RegisterPage() {
     try {
       await axiosInstance.post("/auth/signup", { email, password, role, name });
       toast.success("Registration successful!");
+      dispatch(addCart())
       setTimeout(() => router.push("/signin"), 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed!");

@@ -20,7 +20,7 @@ export default function Header() {
 
   const user = useSelector((state: RootState) => state.auth.user);
   const cartItemCount = useSelector((state: RootState) =>
-    state.cart.items.reduce((sum, item) => sum + item.quantity, 0)
+    Array.isArray(state.cart.items) ? state.cart.items.reduce((sum, item) => sum + item.quantity, 0) : 0
   );
 
   useEffect(() => {
@@ -59,9 +59,14 @@ export default function Header() {
         {!user ? (
           null
         ) :
-          <Button variant="destructive" size="sm" className="md:hidden block" onClick={handleLogout}>
-            <LogOut />
-          </Button>
+          <div>
+            <li>
+              <Link href="/myorders" className="hover:underline" onClick={() => setIsMenuOpen(false)}>My Orders</Link>
+            </li>
+            <Button variant="destructive" size="sm" className="md:hidden block" onClick={handleLogout}>
+              <LogOut />
+            </Button>
+          </div>
         }
       </ul>
     );

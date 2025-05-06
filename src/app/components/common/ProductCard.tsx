@@ -3,7 +3,7 @@ import Link from "next/link"
 import { useDispatch, useSelector } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { addToCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
+import { addCartItem, addToCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
 import type { AppDispatch, RootState } from "@/lib/redux/store"
 import { Minus, Plus } from "lucide-react"
 import { IProduct } from "@/lib/interfaces"
@@ -14,6 +14,7 @@ export default function ProductCard({ product }: { product: IProduct }) {
 
   const handleAddToCart = () => {
     dispatch(addToCart({ product, quantity: 1 }))
+    dispatch(addCartItem({ product_id: product.id, quantity: 1 }))
   }
 
   const handleUpdateQuantity = (newQuantity: number) => {

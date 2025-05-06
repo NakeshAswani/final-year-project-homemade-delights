@@ -11,6 +11,9 @@ export const POST = async (request: NextRequest) => {
         const user_id = Number(request.nextUrl.searchParams.get("user_id"));
         const address_id = Number(request.nextUrl.searchParams.get("address_id"));
         const token = request.headers.get('token');
+        console.log('user_id', user_id);
+        console.log('address_id', address_id);
+        console.log('token', token);
 
         const tokenResponse = await tokenVerification(token, user_id);
         if (tokenResponse) return tokenResponse;

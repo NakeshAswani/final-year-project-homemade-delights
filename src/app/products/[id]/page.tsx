@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Star, ShoppingCart } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "@/lib/redux/store"
-import { addToCart } from "@/lib/redux/slices/cartSlice"
+import { addCart, addCartItem, addToCart } from "@/lib/redux/slices/cartSlice"
 import { fetchSingleProduct } from "@/lib/redux/slices/productsSlice"
 import { useParams } from "next/navigation"
 
@@ -28,6 +28,7 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (product) {
       dispatch(addToCart({ product, quantity }));
+      dispatch(addCartItem({ product_id: product.id, quantity }));
     }
   }
 

@@ -11,6 +11,7 @@ import ProductCard from "./components/common/ProductCard";
 export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const { items: products, loading, error } = useSelector((state: RootState) => state.products);
+  console.log('objects in home', products);
 
   useEffect(() => {
     !products?.length ? dispatch(fetchProducts()) : null;
