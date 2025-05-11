@@ -5,16 +5,65 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { clearCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
+import { addCart, addCartItem, clearCart, fetchCartItems, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
 import type { RootState, AppDispatch } from "@/lib/redux/store"
 import { Minus, Plus } from "lucide-react"
+import { use, useEffect, useState } from "react"
+import { CartItem } from "@prisma/client"
 
 export default function CartPage() {
   const dispatch = useDispatch<AppDispatch>()
+  // const cartItems2 = useSelector((state: RootState) => state.cart.items)
   const cartItems = useSelector((state: RootState) => state.cart.items)
+  // const [cartData, setCartData] = useState({})
+  // const [cartData, setCartData] = useState<CartItem[]>([]);
+  // const cartItemsFromRedux = useSelector((state: RootState) => state.cart.items);
+  // console.log("Redux cartItems:", cartItemsFromRedux);
+  console.log('cartItems', cartItems);
 
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
+  // Then, update your state based on this
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     dispatch(fetchCartItems())
+  //       .unwrap()
+  //       .then((data) => {
+  //         console.log("📦 Data passed to setCartData:", data);
+  //         setCartData(data);  // Ensure it's a fresh array
+  //       });
+  //   }, 1000);
+  // }, [dispatch]);
+
+  // useEffect(() => {
+  //   console.log("✅ Final updated cartData:", cartData);
+  // }, [cartData]);
+
+
+  // useEffect(() => {
+  //   dispatch(fetchCartItems())
+  //     .unwrap()
+  //     .then((response) => {
+  //       console.log('Full response:', response); // <- This includes status, message, and data
+  //       const data = response.data.cartItems; // <-- Extract only the useful payload
+  //       console.log('Data passed to setCartData:', data);
+  //       setCartData(data); // Now cartData = { id, user_id, cartItems }
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error fetching cart items:', error);
+  //     });
+  // }, [dispatch]);
+
+  // useEffect(() => {
+  //   if (cartData.length > 0) {
+  //     console.log("✅ Final updated cartData:", cartData);
+  //   } else {
+  //     console.log("⏳ cartData still empty or not updated yet.");
+  //   }
+  // }, [cartData]);
+
+  const total = Array.isArray(cartItems)
+    ? cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    : 0;
   const handleUpdateQuantity = (id: number, newQuantity: number) => {
     if (newQuantity > 0) {
       dispatch(updateQuantity({ id, quantity: newQuantity }))
@@ -22,6 +71,8 @@ export default function CartPage() {
       dispatch(removeFromCart(id))
     }
   }
+
+
 
   return (
     <div className="container mx-auto px-4 py-8">

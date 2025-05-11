@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axiosInstance";
 import { CartItem, IProduct } from "@/lib/interfaces";
+import Cookies from "js-cookie";
 
 interface CartState {
   items: CartItem[];
@@ -14,15 +15,109 @@ const initialState: CartState = {
   error: null,
 };
 
+const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+const token = user?.data?.token;
+const user_id = user?.data?.id;
+
 // Async thunk to fetch cart items
 export const fetchCartItems = createAsyncThunk<CartItem[], void, { rejectValue: string }>(
   "cart/fetchCartItems",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get("cart");
-      return response.data;
+      const response = await axiosInstance.get(`/cart?user_id=${user_id}`, {
+        headers: {
+          token: token,
+        },
+      });
+
+      const cartItems = response.data.data; // ✅
+      console.log("🛒 cartItems returned from thunk:", cartItems);
+      return cartItems; // ✅ return just the array
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch cart items");
+    }
+  }
+);
+
+// export const fetchCartItems = createAsyncThunk<CartItem[], void, { rejectValue: string }>(
+//   "cart/fetchCartItems",
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       const response = await axiosInstance.get(`/cart?user_id=${user_id}`, {
+//         headers: {
+//           token: token,  // Ensure token is included
+//         },
+//       });
+
+//       // Map Prisma response to a simpler CartItem structure
+//       const cartItems: CartItem[] = response.data.data.cartItems.map((item: any) => ({
+//         id: item.id,
+//         cart_id: item.cart_id,
+//         product_id: item.product_id,
+//         quantity: item.quantity,
+//       }));
+
+//       return cartItems; // Return only the array of CartItems
+//     } catch (error: any) {
+//       return rejectWithValue(error.response?.data?.message || "Failed to fetch cart items");
+//     }
+//   }
+// );
+
+
+
+export const addCart = createAsyncThunk<void, void, { rejectValue: string }>(
+  "cart/addCartItem",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(`/cart?user_id=${user_id}`,
+        {},
+        {
+          headers: {
+            token: token, // Ensure the token is included
+          },
+        }
+      );
+      console.log('response', response);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to add cart item");
+    }
+  }
+);
+
+export const addCartItem = createAsyncThunk<CartItem, { product_id: number; quantity?: number }>(
+  "/cart/item/addCartItem",
+  async ({ product_id, quantity }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post("cart/item", { user_id, product_id, quantity },
+        {
+          headers: {
+            token: token, // Ensure the token is included
+          },
+        }
+      );
+      console.log('response', response);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to add cart item");
+    }
+  }
+);
+
+export const removeItemFromCart = createAsyncThunk<CartItem, { product_id: number }>(
+  "cart/item/removeFromCart",
+  async ({ product_id }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.delete(`cart/item?id=${product_id}`, {
+        headers: {
+          token: token, // Ensure the token is included
+        },
+      });
+      console.log('response', response);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || "Failed to remove cart item");
     }
   }
 );
