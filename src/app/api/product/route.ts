@@ -3,7 +3,7 @@ dotenv.config();
 import cloudinary from "@/lib/cloudinary";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
-import { handleResponse, tokenVerification } from "@/lib/utils";
+import { handleResponse, tokenVerification, userPublicFields } from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
@@ -60,8 +60,14 @@ export const GET = async (request: NextRequest) => {
         const id = Number(request.nextUrl.searchParams.get('id'));
 
         const productData = id
-            ? await prisma.product.findUnique({ where: { id, user: { is_active: true } }, include: { user: true } })
-            : await prisma.product.findMany({ where: { user: { is_active: true } }, include: { user: true } });
+            ? await prisma.product.findUnique({
+                where: { id, user: { is_active: true } },
+                include: { user: { select: userPublicFields } }
+            })
+            : await prisma.product.findMany({
+                where: { user: { is_active: true } },
+                include: { user: { select: userPublicFields }, }
+            });
 
         if (!productData) return handleResponse(404, id ? "Product not found" : "No products found");
 

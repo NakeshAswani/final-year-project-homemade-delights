@@ -1,4 +1,4 @@
-import { handleResponse } from "@/lib/utils";
+import { handleResponse, hashPassword } from "@/lib/utils";
 import { PrismaClient, Role } from "@prisma/client";
 import { NextRequest } from "next/server";
 
@@ -8,8 +8,10 @@ export const POST = async (request: NextRequest) => {
     try {
         const { name, email, password, role } = await request.json() as { name: string, email: string, password: string, role: Role };
 
+        const  hashedPassword = await hashPassword(password);
+
         await prisma.user.create({
-            data: { name, email, password, role }
+            data: { name, email, password: hashedPassword, role }
         });
         return handleResponse(200, "User created successfully");
     }

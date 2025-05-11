@@ -2,7 +2,9 @@ import dotenv from "dotenv";
 dotenv.config();
 import { PrismaClient, OrderStatus } from "@prisma/client";
 import { NextRequest } from "next/server";
-import { handleResponse, tokenVerification } from "@/lib/utils";
+import { handleResponse, tokenVerification, userPublicFields } from "@/lib/utils";
+import { sendEmail } from "@/lib/nodemailer";
+import { orderEmailTemplate } from "@/lib/email-template";
 
 const prisma = new PrismaClient();
 
@@ -41,6 +43,59 @@ export const POST = async (request: NextRequest) => {
             });
         }));
 
+        const fullOrder = await prisma.order.findUnique({
+            where: { id: order.id },
+            include: {
+                orderItems: {
+                    include: {
+                        product: {
+                            include: {
+                                user: true
+                            }
+                        }
+                    }
+                },
+                user: true,
+                address: true
+            }
+        });
+
+        if (!fullOrder) return handleResponse(500, "Error processing order");
+
+        // Calculate total
+        const total = fullOrder.orderItems.reduce((sum, item) =>
+            sum + (item.quantity * item.product.discounted_price), 0);
+
+        // Prepare email data
+        const emailData = {
+            id: fullOrder.id,
+            status: fullOrder.order_status,
+            items: fullOrder.orderItems,
+            address: fullOrder.address,
+            total
+        };
+
+        // Send email to buyer
+        await sendEmail({
+            to: fullOrder.user.email,
+            subject: `Order Confirmation #${fullOrder.id}`,
+            html: orderEmailTemplate(emailData, false)
+        });
+
+        // Send emails to sellers
+        const sellerEmails = new Set<string>();
+        fullOrder.orderItems.forEach(item => {
+            sellerEmails.add(item.product.user.email);
+        });
+
+        await Promise.all(Array.from(sellerEmails).map(async (email) => {
+            await sendEmail({
+                to: email,
+                subject: `New Order Received #${fullOrder.id}`,
+                html: orderEmailTemplate(emailData, true)
+            });
+        }));
+
         return handleResponse(200, "Order status pending", { order_id: order.id });
     } catch (error: any) {
         return handleResponse(500, error.message);
@@ -50,20 +105,68 @@ export const POST = async (request: NextRequest) => {
 export const GET = async (request: NextRequest) => {
     try {
         const user_id = Number(request.nextUrl.searchParams.get("user_id"));
+
         if (user_id) {
             const token = request.headers.get('token');
             const tokenResponse = await tokenVerification(token, user_id);
             if (tokenResponse) return tokenResponse;
 
-            const orders = await prisma.order.findMany({
-                where: { user_id },
-                include: { orderItems: { include: { product: true } } }
+            // Get user role first
+            const user = await prisma.user.findUnique({
+                where: { id: user_id },
+                select: { role: true }
             });
+
+            if (!user) {
+                return handleResponse(404, "User not found");
+            }
+
+            let orders;
+            if (user.role === 'SELLER') {
+                // Fetch orders containing seller's products
+                orders = await prisma.order.findMany({
+                    where: {
+                        orderItems: {
+                            some: {
+                                product: {
+                                    user_id: user_id
+                                }
+                            }
+                        }
+                    },
+                    include: {
+                        orderItems: {
+                            include: {
+                                product: true
+                            }
+                        },
+                        user: { select: userPublicFields },
+                        address: true
+                    }
+                });
+            } else {
+                // Regular buyer order fetch
+                orders = await prisma.order.findMany({
+                    where: { user_id },
+                    include: {
+                        orderItems: { include: { product: true } },
+                        user: { select: userPublicFields },
+                        address: true
+                    }
+                });
+            }
 
             return handleResponse(200, "Orders found", orders);
         }
 
-        const orders = await prisma.order.findMany();
+        // Admin view - all orders
+        const orders = await prisma.order.findMany({
+            include: {
+                orderItems: { include: { product: true } },
+                user: { select: userPublicFields },
+                address: true
+            }
+        });
         return handleResponse(200, "Orders found", orders);
     } catch (error: any) {
         return handleResponse(500, error.message);
@@ -84,18 +187,6 @@ export const PUT = async (request: NextRequest) => {
 
         const tokenResponse = await tokenVerification(token, order.user_id);
         if (tokenResponse) return tokenResponse;
-
-        const validTransitions: Record<OrderStatus, OrderStatus[]> = {
-            PENDING: [],
-            APPROVED: ["PENDING"],
-            IN_TRANSIT: ["APPROVED"],
-            DELIVERED: ["IN_TRANSIT"],
-            CANCELLED: ["APPROVED", "PENDING"]
-        };
-
-        if (!validTransitions[status].includes(order.order_status)) {
-            return handleResponse(400, "Invalid order status transition");
-        }
 
         await prisma.order.update({
             where: { id: Number(order_id) },

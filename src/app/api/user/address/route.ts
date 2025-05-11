@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
-import { handleResponse, tokenVerification } from "@/lib/utils";
+import { handleResponse, tokenVerification, userPublicFields } from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
@@ -21,6 +21,7 @@ export const POST = async (request: NextRequest) => {
         if (!user.is_active) return handleResponse(400, "User is not active");
 
         await prisma.address.create({ data: { user_id, address, city, state, country, pincode } });
+        
         return handleResponse(201, "Address added successfully");
     } catch (error: any) {
         return handleResponse(500, error.message);
@@ -38,7 +39,10 @@ export const GET = async (request: NextRequest) => {
         const user = await prisma.user.findUnique({ where: { id: user_id } });
         if (!user) return handleResponse(404, "User not found");
 
-        const addresses = await prisma.address.findMany({ where: { user_id } });
+        const addresses = await prisma.address.findMany({ 
+            where: { user_id },
+            include: { user: { select: userPublicFields } }
+         });
         if (addresses.length === 0) return handleResponse(404, "Address not found");
 
         return handleResponse(200, "Address found", addresses);

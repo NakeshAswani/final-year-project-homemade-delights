@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { PrismaClient } from "@prisma/client";
 import { NextRequest } from "next/server";
-import { handleResponse, tokenVerification } from "@/lib/utils";
+import { handleResponse, tokenVerification, userPublicFields } from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
@@ -41,7 +41,8 @@ export const GET = async (request: NextRequest) => {
             include: {
                 cartItems: {
                     include: { product: true }
-                }
+                },
+                user: { select: userPublicFields }
             }
         });
 

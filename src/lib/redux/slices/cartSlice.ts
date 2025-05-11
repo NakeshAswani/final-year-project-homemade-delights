@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axiosInstance";
-import { CartItem, Product } from "@/lib/interfaces";
+import { CartItem, IProduct } from "@/lib/interfaces";
 
 interface CartState {
   items: CartItem[];
@@ -31,7 +31,7 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addToCart: (state, action: PayloadAction<{ product: Product; quantity: number }>) => {
+    addToCart: (state, action: PayloadAction<{ product: IProduct; quantity: number }>) => {
       const existingProduct = state.items.find(item => item.id === action.payload.product.id);
       if (existingProduct) {
         existingProduct.quantity += action.payload.quantity;

@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import { PrismaClient, Role } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import { tokenVerification } from "@/lib/utils";
+import { handleResponse, tokenVerification, userPublicFields } from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
@@ -15,19 +15,26 @@ export const GET = async (request: NextRequest) => {
             const tokenResponse = await tokenVerification(token, id);
             if (tokenResponse) return tokenResponse;
 
-            const user = await prisma.user.findUnique({ where: { id } });
+            const user = await prisma.user.findUnique({
+                where: { id },
+                select: userPublicFields
+            });
 
             if (!user) {
-                return NextResponse.json({ status: 404, error: "User not found" });
+                return handleResponse(404, "User not found");
             }
-
-            return NextResponse.json({ status: 200, message: "User Found", data: user });
+            return handleResponse(200, "User Found", user);
         } else {
-            const users = await prisma.user.findMany({ include: { addresses: true } });
-            return NextResponse.json({ status: 200, message: "Users Found", data: users });
+            const users = await prisma.user.findMany({
+                select: {
+                    ...userPublicFields,
+                    addresses: true
+                }
+            });
+            return handleResponse(200, "Users Found", users);
         }
     } catch (error: any) {
-        return NextResponse.json({ status: 500, error: error.message });
+        return handleResponse(500, error.message);
     }
 };
 
@@ -42,14 +49,14 @@ export const PUT = async (request: NextRequest) => {
 
         const user = await prisma.user.findUnique({ where: { id } });
         if (!user) {
-            return NextResponse.json({ status: 404, error: "User not found" });
+            return handleResponse(404, "User not found");
         }
 
         await prisma.user.update({ where: { id }, data: { name, email, role } });
 
-        return NextResponse.json({ status: 200, message: "User updated successfully" });
+        return handleResponse(200, "User updated successfully");
     } catch (error: any) {
-        return NextResponse.json({ status: 500, error: error.message });
+        return handleResponse(500, error.message);
     }
 };
 
@@ -69,9 +76,9 @@ export const PATCH = async (request: NextRequest) => {
 
         await prisma.user.update({ where: { id }, data: { password } });
 
-        return NextResponse.json({ status: 200, message: "Password updated successfully" });
+        return handleResponse(200, "Password updated successfully");
     } catch (error: any) {
-        return NextResponse.json({ status: 500, error: error.message });
+        return handleResponse(500, error.message);
     }
 };
 
@@ -89,8 +96,8 @@ export const DELETE = async (request: NextRequest) => {
 
         await prisma.user.update({ where: { id }, data: { is_active: false } });
 
-        return NextResponse.json({ status: 200, message: "User deactivated successfully" });
+        return handleResponse(200, "User deactivated successfully");
     } catch (error: any) {
-        return NextResponse.json({ status: 500, error: error.message });
+        return handleResponse(500, error.message);
     }
 };

@@ -3,7 +3,7 @@ dotenv.config();
 import cloudinary from "@/lib/cloudinary";
 import { NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { handleResponse, tokenVerification } from "@/lib/utils";
+import { handleResponse, tokenVerification, userPublicFields } from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
@@ -54,7 +54,10 @@ export const GET = async (request: NextRequest) => {
         const id = Number(request.nextUrl.searchParams.get('id'));
 
         if (id) {
-            const category = await prisma.category.findUnique({ where: { id } });
+            const category = await prisma.category.findUnique({
+                where: { id },
+                include: { user: { select: userPublicFields } }
+            });
             if (!category) return handleResponse(404, "Category not found");
             return handleResponse(200, "Category found", category);
         } else {

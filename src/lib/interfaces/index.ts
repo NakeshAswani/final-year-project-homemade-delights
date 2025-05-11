@@ -35,3 +35,29 @@ export interface AuthState {
     loading: boolean;
     error: string | null;
 }
+
+interface ProductEmail {
+    name: string;
+    discounted_price: number;
+}
+
+interface OrderItemEmail {
+    product: ProductEmail;
+    quantity: number;
+}
+
+interface AddressEmail {
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    pincode: number;
+}
+
+export interface OrderDetails {
+    id: number;
+    status: string;
+    items: OrderItemEmail[];
+    address: AddressEmail;
+    total: number;
+}
