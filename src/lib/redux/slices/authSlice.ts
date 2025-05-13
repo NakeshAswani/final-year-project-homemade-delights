@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axiosInstance";
 import Cookies from "js-cookie";
-import { AuthState, IUser } from "@/lib/interfaces";
+import { AuthState, IExtendedUser } from "@/lib/interfaces";
 
 const storedUser = Cookies.get("user");
 const initialState: AuthState = {
@@ -16,7 +16,7 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post("/auth/signin", { email, password });
-      const loginData: IUser = response.data;
+      const loginData: IExtendedUser = response.data;
 
       // **Save user & token in cookies**
       Cookies.set("user", JSON.stringify(loginData), { expires: 365 });
@@ -46,7 +46,7 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action: PayloadAction<IUser>) => {
+      .addCase(loginUser.fulfilled, (state, action: PayloadAction<IExtendedUser>) => {
         state.loading = false;
         state.user = action.payload;
       })

@@ -1,13 +1,8 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axiosInstance";
-import { CartItem, IProduct } from "@/lib/interfaces";
+import { CartItem, CartState } from "@/lib/interfaces";
 import Cookies from "js-cookie";
-
-interface CartState {
-  items: CartItem[];
-  loading: boolean;
-  error: string | null;
-}
+import { Product } from "@prisma/client";
 
 const initialState: CartState = {
   items: [],
@@ -31,40 +26,12 @@ export const fetchCartItems = createAsyncThunk<CartItem[], void, { rejectValue: 
       });
 
       const cartItems = response.data.data; // ✅
-      console.log("🛒 cartItems returned from thunk:", cartItems);
-      return cartItems; // ✅ return just the array
+      return cartItems;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch cart items");
     }
   }
 );
-
-// export const fetchCartItems = createAsyncThunk<CartItem[], void, { rejectValue: string }>(
-//   "cart/fetchCartItems",
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const response = await axiosInstance.get(`/cart?user_id=${user_id}`, {
-//         headers: {
-//           token: token,  // Ensure token is included
-//         },
-//       });
-
-//       // Map Prisma response to a simpler CartItem structure
-//       const cartItems: CartItem[] = response.data.data.cartItems.map((item: any) => ({
-//         id: item.id,
-//         cart_id: item.cart_id,
-//         product_id: item.product_id,
-//         quantity: item.quantity,
-//       }));
-
-//       return cartItems; // Return only the array of CartItems
-//     } catch (error: any) {
-//       return rejectWithValue(error.response?.data?.message || "Failed to fetch cart items");
-//     }
-//   }
-// );
-
-
 
 export const addCart = createAsyncThunk<void, void, { rejectValue: string }>(
   "cart/addCartItem",
@@ -78,7 +45,6 @@ export const addCart = createAsyncThunk<void, void, { rejectValue: string }>(
           },
         }
       );
-      console.log('response', response);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to add cart item");
@@ -97,7 +63,6 @@ export const addCartItem = createAsyncThunk<CartItem, { product_id: number; quan
           },
         }
       );
-      console.log('response', response);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to add cart item");
@@ -114,7 +79,6 @@ export const removeItemFromCart = createAsyncThunk<CartItem, { product_id: numbe
           token: token, // Ensure the token is included
         },
       });
-      console.log('response', response);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to remove cart item");
@@ -126,7 +90,7 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addToCart: (state, action: PayloadAction<{ product: IProduct; quantity: number }>) => {
+    addToCart: (state, action: PayloadAction<{ product: Product; quantity: number }>) => {
       const existingProduct = state.items.find(item => item.id === action.payload.product.id);
       if (existingProduct) {
         existingProduct.quantity += action.payload.quantity;

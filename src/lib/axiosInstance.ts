@@ -15,13 +15,15 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 axiosInstance.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        const { response } = error;
+    (response) => {
         if (response && (response.status === 401 || response.status === 403)) {
             Cookies.remove('token');
             redirect('/signin');
         }
+        return response;
+    },
+    (error) => {
+        const { response } = error;
         return Promise.reject(error);
     }
 );

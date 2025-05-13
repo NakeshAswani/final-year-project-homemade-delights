@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axiosInstance";
-import { IProduct, ProductsState } from "@/lib/interfaces";
+import { IExtendedProduct, ProductsState } from "@/lib/interfaces";
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 
@@ -12,14 +12,23 @@ const initialState: ProductsState = {
 };
 
 const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-const token = user?.token;
+const user_role = user?.data?.role;
+const user_id = user?.data?.id;
+const token = user?.data?.token;
 
-// Async thunk to fetch products
-export const fetchProducts = createAsyncThunk<IProduct[], void, { rejectValue: string }>(
+export const fetchProducts = createAsyncThunk<IExtendedProduct[], void, { rejectValue: string }>(
   "products/fetchProducts",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get("/product");
+      const url = user_role === "SELLER"
+        ? `/product?user_id=${user_id}`
+        : "/product";
+
+      const response = await axiosInstance.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       return response.data?.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch products");
@@ -28,22 +37,19 @@ export const fetchProducts = createAsyncThunk<IProduct[], void, { rejectValue: s
 );
 
 // Async thunk to fetch single product
-export const fetchSingleProduct = createAsyncThunk<IProduct, number, { rejectValue: string }>(
+export const fetchSingleProduct = createAsyncThunk<IExtendedProduct, number, { rejectValue: string }>(
   "products/fetchSingleProduct",
   async (id, { rejectWithValue }) => {
-    // console.log('id:', id);
     try {
       const response = await axiosInstance.get(`/product?id=${id}`);
-      console.log('single product:', response.data?.data);
       return response.data?.data;
     } catch (error: any) {
-      console.error('Error fetching product:', error.response?.data); // Log the error
       return rejectWithValue(error.response?.data?.message || "Failed to fetch product");
     }
   }
 );
 
-export const addProduct = createAsyncThunk<IProduct, FormData, { rejectValue: string }>(
+export const addProduct = createAsyncThunk<IExtendedProduct, FormData, { rejectValue: string }>(
   "products/addProduct",
   async (formData, { rejectWithValue }) => {
     try {
@@ -55,13 +61,12 @@ export const addProduct = createAsyncThunk<IProduct, FormData, { rejectValue: st
       });
       return response.data?.data;
     } catch (error: any) {
-      console.error('Error adding product:', error.response?.data); // Log the error
       return rejectWithValue(error.response?.data?.message || "Failed to add product");
     }
   }
 );
 
-export const updateProduct = createAsyncThunk<IProduct, { id: number; formData: FormData }, { rejectValue: string }>(
+export const updateProduct = createAsyncThunk<IExtendedProduct, { id: number; formData: FormData }, { rejectValue: string }>(
   "products/updateProduct",
   async ({ id, formData }, { rejectWithValue }) => {
     try {
@@ -73,7 +78,6 @@ export const updateProduct = createAsyncThunk<IProduct, { id: number; formData: 
       });
       return response.data?.data;
     } catch (error: any) {
-      console.error('Error updating product:', error.response?.data); // Log the error
       return rejectWithValue(error.response?.data?.message || "Failed to update product");
     }
   }
@@ -89,7 +93,6 @@ export const deleteProduct = createAsyncThunk<void, number, { rejectValue: strin
       });
       return response.data?.data;
     } catch (error: any) {
-      console.error('Error deleting product:', error.response?.data); // Log the error
       return rejectWithValue(error.response?.data?.message || "Failed to delete product");
     }
   }
@@ -112,7 +115,7 @@ const productsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<IProduct[]>) => {
+      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<IExtendedProduct[]>) => {
         state.loading = false;
         state.items = action.payload;
       })

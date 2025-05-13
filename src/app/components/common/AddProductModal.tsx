@@ -1,242 +1,305 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormField } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/lib/redux/store';
-import { addProduct, updateProduct } from '@/lib/redux/slices/productsSlice';
-
-const formSchema = z.object({
-    name: z.string().min(1, { message: "Product name is required" }),
-    description: z.string().min(1, { message: "Description is required" }),
-    price: z.number().min(1, { message: "Price is required" }),
-    discounted_price: z.number().min(1, { message: "Discounted Price is required" }),
-    stock: z.number().min(1, { message: "Stock is required" }),
-    image: z
-        .any()
-        .refine(
-            (file) => {
-                if (typeof window === "undefined" || !file) return true; // Skip validation on the server
-                return file instanceof File && file.size <= 2 * 1024 * 1024;
-            },
-            { message: "Image size should be less than 2MB" }
-        ),
-    category_id: z.number().min(1, { message: "Category is required" }),
-});
-
-interface AddProductModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    product?: any; // Pass product data for updating
-}
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/lib/redux/store';
+import { addProduct, fetchProducts, updateProduct } from '@/lib/redux/slices/productsSlice';
+import { fetchCategories } from '@/lib/redux/slices/categorySlice';
+import { AddProductModalProps } from '@/lib/interfaces';
+import toast from "react-hot-toast";
+import { Loader2 } from "lucide-react";
+import { Address, Category } from '@prisma/client';
+import AddressDialog from './AddressDialog';
+import { capitalizeWords } from '@/lib/utils';
 
 const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, product }) => {
     const dispatch = useDispatch<AppDispatch>();
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        description: '',
+        price: 0,
+        discounted_price: 0,
+        stock: 0,
+        image: null as File | null,
+        category_id: 0,
+        address_id: 0,
+        address: null as Address | null
+    });
+    const [categories, setCategories] = useState<Category[] | null>();
+    const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState<string>("");
+
     const UserCookies = Cookies.get("user");
     const userData = UserCookies ? JSON.parse(UserCookies) : null;
-    const user_id = userData?.id;
-    const { items:categories } = useSelector((state: RootState) => state.category);
-
-    const form = useForm({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            name: product?.name || "",
-            description: product?.description || "",
-            price: product?.price || 0,
-            discounted_price: product?.discounted_price || 0,
-            stock: product?.stock || 0,
-            image: null,
-            category_id: product?.category_id || 0,
-        },
-    });
+    const user_id = userData?.data?.id;
 
     useEffect(() => {
-        if (product) {
-            form.reset({
-                name: product.name,
-                description: product.description,
-                price: product.price,
-                discounted_price: product.discounted_price,
-                stock: product.stock,
-                image: null,
-                category_id: product.category_id,
-            });
-        }
-    }, [product, form]);
-
-    const handleSubmit = async (data: any) => {
-        const formData = new FormData();
-        formData.append("name", data.name);
-        formData.append("description", data.description);
-        formData.append("price", data.price);
-        formData.append("discounted_price", data.discounted_price);
-        formData.append("stock", data.stock);
-        if (data.image && data.image[0]) {
-            formData.append("image", data.image[0]);
-        }
-        formData.append("category_id", data.category_id);
-        formData.append("user_id", user_id);
-
-        if (product) {
-            // Update product
-            dispatch(updateProduct({ id: product.id, formData }))
-                .then((response: any) => {
-                    if (response.meta.requestStatus === "fulfilled") {
-                        onClose();
-                    } else {
-                        console.error("Failed to update product:", response.payload);
-                    }
-                })
-                .catch((error: any) => {
-                    console.error("Error updating product:", error);
+        if (isOpen) {
+            if (product) {
+                setFormData({
+                    name: product.name,
+                    description: product.description,
+                    price: product.price,
+                    discounted_price: product.discounted_price,
+                    stock: product.stock,
+                    image: null,
+                    category_id: product?.category_id,
+                    address_id: product?.address_id ?? 0,
+                    address: product?.address
                 });
-        } else {
-            // Add new product
-            dispatch(addProduct(formData));
-        }
 
-        onClose(); // Close the modal after submission
+                setPreviewUrl(product.image);
+            }
+            // Fetch categories when modal opens
+            dispatch(fetchCategories())
+                .then((res) => setCategories(res.payload ?? []))
+        }
+    }, [isOpen, dispatch]);
+
+    const handleAddressSelect = (address: Address) => {
+        setFormData(prev => ({
+            ...prev,
+            address_id: address.id,
+            address: address
+        }));
     };
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [id]: id === 'price' || id === 'discounted_price' || id === 'stock'
+                ? Number(value)
+                : value
+        }));
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Revoke old object URL if one exists
+        if (previewUrl && previewUrl.startsWith("blob:")) {
+            URL.revokeObjectURL(previewUrl);
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+        setFormData(prev => ({ ...prev, image: file }));
+        setPreviewUrl(objectUrl);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const data = new FormData();
+        data.append("name", formData.name);
+        data.append("address_id", String(formData.address_id));
+        data.append("description", formData.description);
+        data.append("price", formData.price.toString());
+        data.append("discounted_price", formData.discounted_price.toString());
+        data.append("stock", formData.stock.toString());
+        if (formData.image) {
+            data.append("image", formData.image)
+        }
+        if (!formData?.image && product?.image) {
+            data.append("image", product?.image)
+        }
+        data.append("category_id", String(formData.category_id));
+        data.append("user_id", user_id);
+
+        try {
+            if (product) {
+                await dispatch(updateProduct({ id: product.id, formData: data }));
+                toast.success("Product updated successfully");
+            } else {
+                await dispatch(addProduct(data));
+                await dispatch(fetchProducts());
+                toast.success("Product added successfully");
+            }
+            onClose();
+        } catch (error) {
+            toast.error("Unable to add product. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div>
-            {isOpen && (
-                <Dialog open={isOpen} onOpenChange={onClose}>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle>{product ? "Update Product" : "Add Product"}</DialogTitle>
-                        </DialogHeader>
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(handleSubmit)}>
-                                <FormField
-                                    control={form.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                        <div>
-                                            <label htmlFor="name">Product Name</label>
-                                            <input
-                                                id="name"
-                                                type="text"
-                                                {...field}
-                                                placeholder="Product Name"
-                                                className="border rounded p-2 w-full"
-                                            />
-                                        </div>
-                                    )}
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                    <DialogTitle className="text-xl font-semibold">
+                        {product ? "Update Product" : "Add New Product"}
+                    </DialogTitle>
+                </DialogHeader>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="mb-4">
+                        <Label htmlFor="name">Product Name</Label>
+                        <Input
+                            id="name"
+                            type="text"
+                            value={formData.name}
+                            onChange={handleChange}
+                            placeholder="Enter product name"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <Label htmlFor="description">Description</Label>
+                        <textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            placeholder="Product description"
+                            className="flex h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            required
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="mb-4">
+                            <Label htmlFor="price">Price (₹)</Label>
+                            <Input
+                                id="price"
+                                type="number"
+                                value={formData.price}
+                                onChange={handleChange}
+                                placeholder="Enter price"
+                                min="0"
+                                required
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <Label htmlFor="discounted_price">Discounted Price (₹)</Label>
+                            <Input
+                                id="discounted_price"
+                                type="number"
+                                value={formData.discounted_price}
+                                onChange={handleChange}
+                                placeholder="Enter discounted price"
+                                min="0"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="mb-4">
+                            <Label htmlFor="stock">Stock Quantity</Label>
+                            <Input
+                                id="stock"
+                                type="number"
+                                value={formData.stock}
+                                onChange={handleChange}
+                                placeholder="Enter stock quantity"
+                                min="0"
+                                required
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <Label htmlFor="category_id">Category</Label>
+                            <select
+                                id="category_id"
+                                value={formData.category_id}
+                                onChange={handleChange}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                required
+                                disabled={!categories}
+                            >
+                                <option value="">Select Category</option>
+                                {!categories ? (
+                                    <option disabled>
+                                        <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                                    </option>
+                                ) : (
+                                    Array.isArray(categories) && categories?.length ? categories?.map((category: Category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {capitalizeWords(category?.name)}
+                                        </option>
+                                    )) : null
+                                )}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <Label htmlFor="image">Product Image</Label>
+
+                        {previewUrl && (
+                            <div className="mt-2">
+                                <img
+                                    src={previewUrl}
+                                    alt="Product preview"
+                                    className="w-[200px] h-[150px] object-cover rounded-md border"
                                 />
-                                <FormField
-                                    control={form.control}
-                                    name="description"
-                                    render={({ field }) => (
-                                        <div>
-                                            <label htmlFor="description">Description</label>
-                                            <textarea
-                                                id="description"
-                                                {...field}
-                                                placeholder="Description"
-                                                className="border rounded p-2 w-full"
-                                            />
-                                        </div>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="price"
-                                    render={({ field }) => (
-                                        <div>
-                                            <label htmlFor="price">Price</label>
-                                            <input
-                                                id="price"
-                                                type="number"
-                                                {...field}
-                                                placeholder="Price"
-                                                className="border rounded p-2 w-full"
-                                            />
-                                        </div>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="discounted_price"
-                                    render={({ field }) => (
-                                        <div>
-                                            <label htmlFor="discounted_price">Discounted Price</label>
-                                            <input
-                                                id="discounted_price"
-                                                type="number"
-                                                {...field}
-                                                placeholder="Discounted Price"
-                                                className="border rounded p-2 w-full"
-                                            />
-                                        </div>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="stock"
-                                    render={({ field }) => (
-                                        <div>
-                                            <label htmlFor="stock">Stock</label>
-                                            <input
-                                                id="stock"
-                                                type="number"
-                                                {...field}
-                                                placeholder="Stock"
-                                                className="border rounded p-2 w-full"
-                                            />
-                                        </div>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="image"
-                                    render={({ field }) => (
-                                        <div>
-                                            <label htmlFor="image">Image</label>
-                                            <input
-                                                id="image"
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => field.onChange(e.target.files)}
-                                                className="border rounded p-2 w-full"
-                                            />
-                                        </div>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="category_id"
-                                    render={({ field }) => (
-                                        <div>
-                                            <label htmlFor="category_id">Category</label>
-                                            <select
-                                                id="category_id"
-                                                {...field}
-                                                className="border rounded p-2 w-full"
-                                            >
-                                                
-                                                <option value="">Select Category</option>
-                                                {categories.map((category: any) => (
-                                                    <option key={category.id} value={category.id}>
-                                                        {category.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    )}
-                                />
-                                <Button type="submit">{product ? "Update Product" : "Add Product"}</Button>
-                            </form>
-                        </Form>
-                    </DialogContent>
-                </Dialog>
-            )}
-        </div>
+                            </div>
+                        )}
+
+                        <div className="mt-2">
+                            <Label
+                                htmlFor="image"
+                                className="cursor-pointer border px-4 py-2 rounded-md"
+                            >
+                                {product?.image ? "Change Image" : "Upload Image"}
+                            </Label>
+                            <Input
+                                id="image"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <Label>Product Address</Label>
+                        {formData.address ? (
+                            <div className="p-3 border rounded-md bg-muted">
+                                <p className="text-sm">
+                                    {formData.address.address}, {formData.address.city},<br />
+                                    {formData.address.state}, {formData.address.country} - {formData.address.pincode}
+                                </p>
+                            </div>
+                        ) : (
+                            null
+                        )}
+                        <div className="mt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setAddressDialogOpen(true)}
+                            >
+                                {formData?.address ? "Change Address" : "Select Address"}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <Button
+                        type="submit"
+                        className="w-full !mt-8"
+                        disabled={loading}
+                    >
+                        {loading ? "Processing..." : (product ? "Update Product" : "Add Product")}
+                    </Button>
+                </form>
+            </DialogContent>
+            {/* Address Dialog */}
+            <AddressDialog
+                open={addressDialogOpen}
+                onClose={() => setAddressDialogOpen(false)}
+                onSelect={handleAddressSelect}
+                selectedAddressId={formData?.address_id}
+            />
+        </Dialog>
     );
 };
 

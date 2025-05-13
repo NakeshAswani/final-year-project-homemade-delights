@@ -1,43 +1,47 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch } from '@/lib/redux/store'; // Adjust the path to your store file
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/lib/redux/store';
 import { fetchOrder } from '@/lib/redux/slices/orderSlice';
 import OrderCard from '../components/common/OrderCard';
-
-
-
-
+import toast from 'react-hot-toast';
+import { IExtendedOrder } from '@/lib/interfaces';
+import { useRouter } from 'next/navigation';
+import Loader from '../components/common/Loader';
 
 const MyOrders = () => {
     const dispatch: AppDispatch = useDispatch();
-    // const dispatch = useDispatch();
-    const [orders, setOrders] = useState([]);
-    const user = JSON.parse(Cookies.get("user") || "");
-    const userId = user?.data?.id;
+    const [orders, setOrders] = useState<IExtendedOrder[]>([]);
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
     useEffect(() => {
+        const user = JSON?.parse(Cookies.get("user") || "");
+        const userId = user?.data?.id;
         if (!userId) {
-            console.error("User ID not found in cookies");
+            router.push("/signin");
             return;
         }
         dispatch(fetchOrder(userId))
-            // .unwrap()
             .then((response) => {
-                console.log("Orders fetched successfully:", response);
-                setOrders(response.payload)
+                response.payload ? setOrders(response.payload as IExtendedOrder[]) : toast.error("Error fetching orders")
+                setLoading(false);
             })
             .catch((error) => {
-                console.error("Error fetching orders:", error.message);
+                toast.error("Error fetching orders")
             });
 
     }, [])
 
+    if (loading) {
+        return <Loader />;
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6">My Orders</h1>
-            {orders.length > 0 ? (
+            <h1 className="text-3xl font-bold mb-12">My Orders</h1>
+            {Array.isArray(orders) ? (
                 <OrderCard orders={orders} />
             ) : (
                 <div className="text-center mt-4">
@@ -45,7 +49,6 @@ const MyOrders = () => {
                     <p className="text-gray-500">You have no orders yet.</p>
                 </div>
             )}
-            {/* <p>You have no orders yet.</p> */}
         </div>
     );
 }

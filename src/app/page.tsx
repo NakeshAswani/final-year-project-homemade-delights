@@ -6,18 +6,25 @@ import { AppDispatch, RootState } from "@/lib/redux/store";
 import { fetchProducts } from "@/lib/redux/slices/productsSlice";
 import { useEffect } from "react";
 import Loader from "./components/common/Loader";
-import ProductCard from "./components/common/ProductCard";
+import FeaturedProducts from "./components/products/FeaturedProducts";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const { items: products, loading, error } = useSelector((state: RootState) => state.products);
-  console.log('objects in home', products);
+  const router = useRouter()
+
+  const UserCookies = Cookies.get("user");
+  const userData = UserCookies ? JSON.parse(UserCookies) : null;
+  const user_role = userData?.data?.role;
 
   useEffect(() => {
+    user_role === "SELLER" ? router.push("/products") : null;
     !products?.length ? dispatch(fetchProducts()) : null;
   }, [dispatch]);
 
-  if (loading) {
+  if (loading || user_role === "SELLER") {
     return <Loader />
   }
 
@@ -39,18 +46,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section>
-        <h2 className="text-3xl font-semibold mb-6">Featured Products</h2>
-        {
-          products?.length ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : <div className="text-xl">Out Of Stock! Sorry For The Inconvenience...</div>
-        }
-      </section>
+      <FeaturedProducts products={products} />
     </div>
   );
 }

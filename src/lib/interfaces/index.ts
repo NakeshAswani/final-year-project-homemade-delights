@@ -1,37 +1,27 @@
-export interface IProduct {
-    id: number;
-    name: string;
-    price: number;
-    image: string;
-    seller: string;
-    description: string;
-    user: IUser;
-}
+import { Address, Cart, Category, Order, OrderItem, Product, User } from "@prisma/client";
 
 export interface ProductsState {
-    items: IProduct[];
+    items: IExtendedProduct[];
     loading: boolean;
     error: string | null;
     searchQuery: string;
     sortOrder: string;
 }
 
-export interface CartItem extends IProduct {
+export interface CartItem extends Product {
     quantity: number;
 }
 
-export interface IUser {
-    email: string;
-    password: string;
-    id: number;
-    name: string;
-    role: string;
-    is_active: boolean;
-    token: string;
+export interface IExtendedUser extends User {
+    categories: Category[];
+    products: Product[];
+    carts: Cart[];
+    orders: Order[];
+    addresses: Address[];
 }
 
 export interface AuthState {
-    user: IUser | null;
+    user: IExtendedUser | null;
     loading: boolean;
     error: string | null;
 }
@@ -60,4 +50,53 @@ export interface OrderDetails {
     items: OrderItemEmail[];
     address: AddressEmail;
     total: number;
+}
+
+export interface CartState {
+    items: CartItem[];
+    loading: boolean;
+    error: string | null;
+}
+
+export interface AddProductModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    product: IExtendedProduct | null;
+}
+
+export interface AddCategoryModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export interface AddressDialogProps {
+    open: boolean;
+    onClose: () => void;
+    onSelect: (address: Address) => void;
+    selectedAddressId?: number;
+}
+
+export interface IAddOrder {
+    address_id: number;
+    cartItems: CartItem[];
+    total: number;
+    name: string;
+    email: string;
+}
+
+export interface IExtendedOrder extends Order {
+    orderItems: (OrderItem & {
+        product: IExtendedProduct;
+    })[];
+}
+
+export interface IExtendedProduct extends Product {
+    address: Address
+    user: IExtendedUser;
+    orderItems: (OrderItem & {
+        order: Order;
+    })[];
+    cartItems: (CartItem & {
+        cart: Cart;
+    })[];
 }

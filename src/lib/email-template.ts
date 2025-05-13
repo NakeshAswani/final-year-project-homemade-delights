@@ -43,15 +43,15 @@ export const orderEmailTemplate = (orderDetails: OrderDetails, isSeller: boolean
             ${orderDetails.items.map((item: any) => `
                 <tr>
                     <td>${item.product.name}</td>
-                    <td>$${item.product.discounted_price}</td>
+                    <td>₹${item.product.discounted_price}</td>
                     <td>${item.quantity}</td>
-                    <td>$${item.quantity * item.product.discounted_price}</td>
+                    <td>₹${item.quantity * item.product.discounted_price}</td>
                 </tr>
             `).join('')}
         </table>
 
         <div class="total">
-            <p>Total Amount: $${orderDetails.total}</p>
+            <p>Total Amount: ₹${orderDetails.total}</p>
         </div>
 
         <h3>Shipping Address:</h3>

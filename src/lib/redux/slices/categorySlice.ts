@@ -9,7 +9,7 @@ const initialState = {
 };
 
 const user = JSON.parse(Cookies.get("user") || "{}");
-const user_token = user?.token;
+const user_token = user?.data?.token;
 
 export const addCategory = createAsyncThunk(
   "category/addCategory",
@@ -23,7 +23,6 @@ export const addCategory = createAsyncThunk(
       });
       return response.data?.data;
     } catch (error: any) {
-      console.error("Error adding category:", error.response?.data); // Log the error
       return rejectWithValue(
         error.response?.data?.message || "Failed to add category"
       );
@@ -42,7 +41,6 @@ export const fetchCategories = createAsyncThunk(
       });
       return response.data?.data;
     } catch (error: any) {
-      console.error("Error fetching categories:", error.response?.data); // Log the error
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch categories"
       );
@@ -62,7 +60,6 @@ export const updateCategory = createAsyncThunk(
       });
       return response.data?.data;
     } catch (error: any) {
-      console.error("Error updating category:", error.response?.data); // Log the error
       return rejectWithValue(
         error.response?.data?.message || "Failed to update category"
       );
@@ -81,7 +78,6 @@ export const fetchCategoryById = createAsyncThunk(
       });
       return response.data?.data;
     } catch (error: any) {
-      console.error("Error fetching category:", error.response?.data); // Log the error
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch category"
       );

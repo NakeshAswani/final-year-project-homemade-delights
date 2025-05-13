@@ -6,24 +6,20 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { addCartItem, addToCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
 import type { AppDispatch, RootState } from "@/lib/redux/store"
 import { Minus, Plus } from "lucide-react"
-import { IProduct } from "@/lib/interfaces"
 import Cookies from "js-cookie"
 import { deleteProduct } from "@/lib/redux/slices/productsSlice"
 import { useState } from "react";
 import AddProductModal from "./AddProductModal";
+import { IExtendedProduct } from "@/lib/interfaces"
 
-interface HandleDelete {
-  (id: number): void;
-}
-
-export default function ProductCard({ product }: { product: IProduct }) {
+export default function ProductCard({ product }: { product: IExtendedProduct }) {
   const dispatch = useDispatch<AppDispatch>()
   const cartItem = useSelector((state: RootState) => state.cart.items.find((item) => item.id === product.id))
   const userCookie = JSON.parse(Cookies.get("user") || "{}");
-  const user_role = userCookie.role;
-  const user_id = userCookie.id;
+  const user_role = userCookie?.data?.role;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<IProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<IExtendedProduct | null>(null);
 
   const handleAddToCart = () => {
     dispatch(addToCart({ product, quantity: 1 }))
@@ -39,24 +35,24 @@ export default function ProductCard({ product }: { product: IProduct }) {
   }
 
   const handleUpdate = () => {
-    setSelectedProduct(product); // Set the product to be updated
-    setIsModalOpen(true); // Open the modal
+    setSelectedProduct(product);
+    setIsModalOpen(true);
   };
 
-  const handleDelete: HandleDelete = (id) => {
+  const handleDelete = (id: number) => {
     dispatch(deleteProduct(id));
   };
 
   return (
-    <>
+    <div>
       <Card>
-        <CardHeader>
+        <CardHeader className="!p-[0px] !pb-6">
           <Image
             src={product.image || "/placeholder.svg"}
             alt={product.name}
             width={200}
             height={200}
-            className="w-full h-48 object-cover rounded-t-lg"
+            className="w-full h-[13rem] object-cover rounded-t-lg"
           />
         </CardHeader>
         <CardContent>
@@ -65,10 +61,7 @@ export default function ProductCard({ product }: { product: IProduct }) {
           <p className="text-sm text-muted-foreground mt-2 capitalize">Seller: {product.user.name}</p>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" asChild>
-            <Link href={`/products/${product.id}`}>View Details</Link>
-          </Button>
-          {user_role === "seller" ? (
+          {user_role === "SELLER" ? (
             <div className="flex gap-2">
               <Button variant="secondary" onClick={handleUpdate}>
                 Update
@@ -77,19 +70,26 @@ export default function ProductCard({ product }: { product: IProduct }) {
                 Delete
               </Button>
             </div>
-          ) : cartItem ? (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => handleUpdateQuantity(cartItem.quantity - 1)}>
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="mx-2">{cartItem.quantity}</span>
-              <Button variant="outline" size="icon" onClick={() => handleUpdateQuantity(cartItem.quantity + 1)}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <Button onClick={handleAddToCart}>Add to Cart</Button>
-          )}
+          ) :
+            <Button variant="outline" asChild>
+              <Link href={`/products/${product.id}`}>View Details</Link>
+            </Button>
+          }
+          {
+            cartItem && user_role !== "SELLER" ? (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={() => handleUpdateQuantity(cartItem.quantity - 1)}>
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="mx-2">{cartItem.quantity}</span>
+                <Button variant="outline" size="icon" onClick={() => handleUpdateQuantity(cartItem.quantity + 1)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : user_role !== "SELLER" ? (
+              <Button onClick={handleAddToCart}>Add to Cart</Button>
+            ) : null
+          }
         </CardFooter>
       </Card>
 
@@ -99,7 +99,7 @@ export default function ProductCard({ product }: { product: IProduct }) {
         onClose={() => setIsModalOpen(false)}
         product={selectedProduct}
       />
-    </>
+    </div>
   )
 }
 

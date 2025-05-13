@@ -5,24 +5,28 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Star, ShoppingCart } from "lucide-react"
+import { ShoppingCart } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "@/lib/redux/store"
-import { addCart, addCartItem, addToCart } from "@/lib/redux/slices/cartSlice"
-import { fetchSingleProduct } from "@/lib/redux/slices/productsSlice"
+import { addCartItem, addToCart } from "@/lib/redux/slices/cartSlice"
+import { fetchProducts, fetchSingleProduct } from "@/lib/redux/slices/productsSlice"
 import { useParams } from "next/navigation"
+import Loader from "@/app/components/common/Loader"
+import FeaturedProducts from "@/app/components/products/FeaturedProducts"
 
 export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const dispatch = useDispatch<AppDispatch>();
   const id = Number(useParams().id);
 
-  // Fetch product data
+  const { items: products, loading } = useSelector((state: RootState) => state.products);
+
   useEffect(() => {
     dispatch(fetchSingleProduct(id));
+
+    !products?.length ? dispatch(fetchProducts()) : null;
   }, [dispatch, id]);
 
-  // Get product data from Redux store
   const product = useSelector((state: RootState) => state.products.items.find((item) => item.id === id));
 
   const handleAddToCart = () => {
@@ -32,14 +36,14 @@ export default function ProductDetailPage() {
     }
   }
 
-  if (!product) {
-    return <div>Loading...</div>;
+  if (!product || loading) {
+    return <Loader />;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid md:grid-cols-2 gap-8">
-        <div>
+    <div className="container mx-auto px-4 py-8 capitalize">
+      <div className="grid md:grid-cols-2 gap-8 pb-12">
+        <div className="flex items-center justify-center">
           <Image
             src={product.image || "/placeholder.svg"}
             alt={product.name}
@@ -50,17 +54,10 @@ export default function ProductDetailPage() {
         </div>
         <div>
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-          <p className="text-xl text-muted-foreground mb-4">by {product?.user.name}</p>
+          <p className="text-xl text-muted-foreground mb-4">by {product?.user?.name}</p>
           <div className="flex items-center mb-4">
-            {/* {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-5 h-5 ${i < Math.floor(product.rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-              />
-            ))}
-            <span className="ml-2 text-muted-foreground">({product.reviews} reviews)</span> */}
           </div>
-          <p className="text-2xl font-bold mb-4">${product.price.toFixed(2)}</p>
+          <p className="text-2xl font-bold mb-4">₹{product.price.toFixed(2)}</p>
           <p className="mb-6">{product.description}</p>
           <div className="flex items-center mb-6">
             <Input
@@ -89,6 +86,7 @@ export default function ProductDetailPage() {
           </Card>
         </div>
       </div>
+      <FeaturedProducts products={products} />
     </div>
   )
 }

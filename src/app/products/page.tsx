@@ -3,43 +3,69 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { fetchProducts, setSearchQuery, setSortOrder } from "@/lib/redux/slices/productsSlice";
 import type { AppDispatch, RootState } from "@/lib/redux/store";
 import ProductCard from "@/app/components/common/ProductCard";
 import Loader from "../components/common/Loader";
+import Cookies from "js-cookie";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import AddProductModal from "../components/common/AddProductModal";
+import AddCategoryModal from "../components/common/AddCategoryModal";
+import { capitalizeWords } from "@/lib/utils";
 
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { items: products, loading, error, searchQuery, sortOrder } = useSelector(
+  const { items: products = [], loading, error, searchQuery, sortOrder } = useSelector(
     (state: RootState) => state.products
   );
+  const [selectedCity, setSelectedCity] = useState<string>("all");
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
-  const [selectedCity, setSelectedCity] = useState<string>(""); // State for selected city
+  const UserCookies = Cookies.get("user");
+  const userData = UserCookies ? JSON.parse(UserCookies) : null;
+  const user_role = userData?.data?.role;
 
   useEffect(() => {
-    !products?.length ? dispatch(fetchProducts()) : null;
-  }, [dispatch]);
+    if (!products.length) dispatch(fetchProducts());
+  }, [dispatch, products?.length]);
 
+  // Extract _only_ the city names from the first address of each user
+  const cities = Array.from(
+    new Set(
+      products
+        .map((p) => p.user.addresses?.[0]?.city) // grab .city
+        .filter((c): c is string => Boolean(c))
+    )
+  );
+
+  // Handlers
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setSearchQuery(e.target.value));
   };
-
   const handleSortChange = (value: string) => {
     dispatch(setSortOrder(value));
   };
-
   const handleCityChange = (value: string) => {
     setSelectedCity(value);
   };
 
-  // **Extract Unique Cities**
-  const cities = Array.from(new Set(products.map((product) => product?.city))).filter(Boolean);
-
-  // **Filter & Sort Products**
+  // Apply search, city-filter, then sort
   const filteredProducts = products
-    ?.filter((product) => product.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    .filter((product) => (selectedCity !== "all" ? product?.city === selectedCity : true)) // Check for "all"
+    .filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((p) =>
+      selectedCity === "all"
+        ? true
+        : p.user.addresses?.[0]?.city === selectedCity
+    )
     .sort((a, b) => {
       switch (sortOrder) {
         case "price-low-high":
@@ -55,16 +81,30 @@ export default function ProductsPage() {
       }
     });
 
-  if (loading) {
-    return <Loader />;
-  }
+  if (loading) return <Loader />;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">All Products</h1>
+      {/* Seller Actions */}
+      {user_role === "SELLER" && (
+        <div className="flex gap-3 mb-4">
+          <Button onClick={() => setIsProductModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setIsCategoryModalOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Category
+          </Button>
+        </div>
+      )}
 
       {/* Search, Sort & Filter */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-start items-center mb-6 gap-4">
         <Input
           type="search"
           placeholder="Search products..."
@@ -72,6 +112,7 @@ export default function ProductsPage() {
           value={searchQuery}
           onChange={handleSearchChange}
         />
+
         <Select onValueChange={handleSortChange}>
           <SelectTrigger className="w-full md:w-40">
             <SelectValue placeholder="Sort by" />
@@ -83,15 +124,16 @@ export default function ProductsPage() {
             <SelectItem value="name-z-a">Name: Z to A</SelectItem>
           </SelectContent>
         </Select>
-        <Select onValueChange={handleCityChange}>
+
+        <Select onValueChange={handleCityChange} defaultValue="all">
           <SelectTrigger className="w-full md:w-40">
             <SelectValue placeholder="Filter by City" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Cities</SelectItem> {/* Use "all" instead of an empty string */}
+            <SelectItem value="all">All Cities</SelectItem>
             {cities.map((city) => (
               <SelectItem key={city} value={city}>
-                {city}
+                {capitalizeWords(city)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -100,12 +142,26 @@ export default function ProductsPage() {
 
       {/* Product Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.length ? (
-          filteredProducts.map((product) => <ProductCard key={product.id} product={product} />)
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))
         ) : (
-          <p className="text-center col-span-full">Out Of Stock! Sorry For The Inconvenience...</p>
+          <p className="text-center col-span-full">
+            No products found!
+          </p>
         )}
       </div>
+      {/* Modals */}
+      <AddProductModal
+        isOpen={isProductModalOpen}
+        onClose={() => setIsProductModalOpen(false)}
+        product={null}
+      />
+      <AddCategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+      />
     </div>
   );
 }

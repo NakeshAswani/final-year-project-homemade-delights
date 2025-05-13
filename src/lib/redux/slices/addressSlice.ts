@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axiosInstance";
-import { IUser } from "@/lib/interfaces";
+import { Address } from "@prisma/client";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 
@@ -9,21 +9,19 @@ const initialState = {
     state: null,
     country: null,
     pincode: null
-} as any;
+};
 
 const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-// console.log('user:', user);
-// console.log('user token:', user?.data?.token);
 const token = user?.data?.token;
 
-export const fetchAddress = createAsyncThunk<IUser[], number, { rejectValue: string }>(
+export const fetchAddress = createAsyncThunk<Address[], number, { rejectValue: string }>(
     "address/fetchAddress",
     async (userId, { rejectWithValue }) => {
         try {
             const response = await axiosInstance.get(`/user/address?user_id=${userId}`,
                 {
                     headers: {
-                        token: token, // Ensure the token is included
+                        token: token
                     },
                 }
             );
@@ -33,7 +31,7 @@ export const fetchAddress = createAsyncThunk<IUser[], number, { rejectValue: str
             if (response.data?.data.length === 0) {
                 return rejectWithValue("No address found for this user");
             }
-            // console.log("Fetched address data:", response.data?.data);
+
             return response.data?.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || "Failed to fetch address");
@@ -54,13 +52,11 @@ export const addAddress = createAsyncThunk(
                     },
                 }
             );
-            console.log("API response:", response.data);
             if (response.status !== 200) {
                 return rejectWithValue("Failed to add address");
             }
             return response.data?.data;
         } catch (error: any) {
-            console.error("Error in addAddress thunk:", error.response?.data || error.message);
             return rejectWithValue(error.response?.data?.message || "Failed to add address");
         }
     }
@@ -125,12 +121,9 @@ const addressSlice = createSlice({
             state.state = action.payload.state;
             state.country = action.payload.country;
             state.pincode = action.payload.pincode;
-        },
-        getAddress: (state) => {
-            return state.address;
         }
     }
 });
 
-export const { setAddress, updateAddress, getAddress } = addressSlice.actions;
+export const { setAddress, updateAddress } = addressSlice.actions;
 export default addressSlice.reducer;

@@ -57,7 +57,6 @@ export async function hashPassword(password: string) {
     const hash = await bcrypt.hash(password, salt);
     return hash;
   } catch (error) {
-    console.error("Error hashing password:", error);
     throw error;
   }
 }
@@ -67,7 +66,10 @@ export async function comparePassword(password: string, hashedPassword: string) 
     const match = await bcrypt.compare(password, hashedPassword);
     return match; // Returns true if the password matches, false otherwise
   } catch (error) {
-    console.error("Error comparing password:", error);
     throw error;
   }
 }
+
+export const capitalizeWords = (str: string) => {
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};

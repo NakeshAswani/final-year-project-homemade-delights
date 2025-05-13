@@ -43,7 +43,7 @@ export const GET = async (request: NextRequest) => {
             where: { user_id },
             include: { user: { select: userPublicFields } }
          });
-        if (addresses.length === 0) return handleResponse(404, "Address not found");
+        if (addresses.length === 0) return handleResponse(200, "No Addresses Exist Of This User!");
 
         return handleResponse(200, "Address found", addresses);
     } catch (error: any) {

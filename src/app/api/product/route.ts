@@ -14,6 +14,7 @@ export const POST = async (request: NextRequest) => {
         const formData = await request.formData();
 
         const category_id = Number(formData.get("category_id"));
+        const address_id = Number(formData.get("address_id"));
         const user_id = Number(formData.get("user_id"));
         const name = formData.get("name") as string;
         const description = formData.get("description") as string;
@@ -45,7 +46,7 @@ export const POST = async (request: NextRequest) => {
         const upload_url = cloudinary.url(upload.public_id, { transformation: { quality: "auto", fetch_format: "auto" } });
 
         await prisma.product.create({
-            data: { category_id, user_id, name, description, price, discounted_price, stock, image: upload_url }
+            data: { category_id, address_id, user_id, name, description, price, discounted_price, stock, image: upload_url }
         });
 
         return handleResponse(201, "Product added successfully");
@@ -54,19 +55,33 @@ export const POST = async (request: NextRequest) => {
     }
 };
 
-// **GET - Fetch Products**
 export const GET = async (request: NextRequest) => {
     try {
         const id = Number(request.nextUrl.searchParams.get('id'));
+        const userId = Number(request.nextUrl.searchParams.get('user_id'));
+
+        const baseWhere = {
+            user: {
+                is_active: true,
+                ...(userId && { id: userId })
+            }
+        };
 
         const productData = id
             ? await prisma.product.findUnique({
-                where: { id, user: { is_active: true } },
-                include: { user: { select: userPublicFields } }
+                where: {
+                    id,
+                    ...baseWhere
+                },
+                include: { user: { select: userPublicFields },  address: true }
             })
             : await prisma.product.findMany({
-                where: { user: { is_active: true } },
-                include: { user: { select: userPublicFields }, }
+                where: baseWhere,
+                include: {
+                    user: { select: userPublicFields },
+                    category: true,
+                    address: true,
+                }
             });
 
         if (!productData) return handleResponse(404, id ? "Product not found" : "No products found");

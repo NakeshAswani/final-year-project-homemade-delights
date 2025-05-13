@@ -23,6 +23,11 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<"SELLER" | "BUYER" | "">("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [country, setCountry] = useState("");
+  const [pincode, setPincode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [checkUserExistsLoader, setCheckUserExistsLoader] = useState(true);
@@ -38,6 +43,17 @@ export default function RegisterPage() {
       return;
     }
 
+    if (role === "SELLER") {
+      if (!address || !city || !state || !country || !pincode) {
+        setError("All address fields are required for sellers!");
+        return;
+      }
+      if (pincode.length !== 6 || isNaN(Number(pincode))) {
+        setError("Pincode must be a 6-digit number!");
+        return;
+      }
+    }
+
     if (!name) {
       setError("Please enter your name!");
       return;
@@ -50,9 +66,25 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await axiosInstance.post("/auth/signup", { email, password, role, name });
+      const payload = {
+        email,
+        password,
+        role,
+        name,
+        ...(role === "SELLER" && {
+          addresses: [{
+            address,
+            city,
+            state,
+            country,
+            pincode: Number(pincode)
+          }]
+        })
+      };
+
+      await axiosInstance.post("/auth/signup", payload);
       toast.success("Registration successful!");
-      dispatch(addCart())
+      dispatch(addCart());
       setTimeout(() => router.push("/signin"), 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed!");
@@ -64,9 +96,9 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (user) {
-      router.replace("/"); // Redirect if user is logged in
+      router.replace("/");
     } else {
-      setCheckUserExistsLoader(false); // Stop loader if no user is found
+      setCheckUserExistsLoader(false);
     }
   }, [user, router]);
 
@@ -75,8 +107,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-screen">
-      <Card className="w-full max-w-md">
+    <div className="px-4 py-8 flex justify-center items-center min-h-screen bg-gray-200">
+      <Card className="w-full max-w-xl py-6">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">Register</CardTitle>
         </CardHeader>
@@ -133,7 +165,7 @@ export default function RegisterPage() {
                 required
               />
             </div>
-            <div className="mb-4">
+            <div>
               <Label htmlFor="role">
                 Select Role <span className="text-red-500">*</span>
               </Label>
@@ -147,7 +179,83 @@ export default function RegisterPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+
+            {role === "SELLER" && (
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label htmlFor="address">
+                    Street Address <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="address"
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="123 Main Street"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="city">
+                    City <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="city"
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Enter City Name..."
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">
+                    State <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="state"
+                    type="text"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    placeholder="Enter State Name..."
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="country">
+                    Country <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="country"
+                    type="text"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    placeholder="Enter Country Name..."
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pincode">
+                    Pincode <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pincode"
+                    type="text"
+                    value={pincode}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "" || /^\d+$/.test(value)) {
+                        setPincode(value.slice(0, 6));
+                      }
+                    }}
+                    placeholder="Enter Pincode..."
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full mt-8" disabled={loading}>
               {loading ? "Registering..." : "Register"}
             </Button>
           </form>

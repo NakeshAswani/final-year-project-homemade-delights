@@ -32,7 +32,7 @@ export default function LoginPage() {
 
     try {
       const res = await dispatch(loginUser({ email, password })).unwrap();
-      router.push("/"); // Redirect after login success
+      res?.role === "SELLER" ? router.push("/") : router.push("/products"); // Redirect after login success
     } catch (err: any) {
       toast.error("Login failed!");
       setError(err.message || "Login failed!");
@@ -54,8 +54,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-screen">
-      <Card className="w-full max-w-md">
+    <div className="px-4 py-8 flex justify-center items-center min-h-screen bg-gray-200">
+      <Card className="w-full max-w-lg py-6">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
         </CardHeader>

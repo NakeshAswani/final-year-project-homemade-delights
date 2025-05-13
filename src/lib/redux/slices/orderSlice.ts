@@ -1,5 +1,6 @@
 import axiosInstance from "@/lib/axiosInstance";
-import { IUser } from "@/lib/interfaces";
+import { IAddOrder } from "@/lib/interfaces";
+import { Order } from "@prisma/client";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 
@@ -11,16 +12,13 @@ const initialState = {
     orderItems: null,
     orderTotal: null,
     orderDate: null,
-} as any;
-
+};
 
 const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-// console.log('user:', user);
-// console.log('user token:', user?.data?.token);
 const token = user?.data?.token;
 const userId = user?.data?.id;
 
-export const fetchOrder = createAsyncThunk<IUser[], number, { rejectValue: string }>(
+export const fetchOrder = createAsyncThunk<Order[], number, { rejectValue: string }>(
     "order/fetchOrder",
     async (userId, { rejectWithValue }) => {
         try {
@@ -46,14 +44,10 @@ export const fetchOrder = createAsyncThunk<IUser[], number, { rejectValue: strin
 
 export const addOrder = createAsyncThunk(
     "order/addOrder",
-    async (orderData: any, { rejectWithValue }) => {
-        console.log('orderData', orderData);
-        console.log('userid', userId);
-        console.log('address_id', orderData?.shippingAddress?.id);
-        console.log('path:', `/order?user_id=${userId}?address_id=${orderData?.shippingAddress?.id}`);
+    async (orderData: IAddOrder, { rejectWithValue }) => {
         try {
             const response = await axiosInstance.post(
-                `/order?user_id=${userId}&address_id=${orderData?.shippingAddress?.id}`, // Add user_id as a query parameter
+                `/order?user_id=${userId}&address_id=${orderData?.address_id}`, // Add user_id as a query parameter
                 orderData,
                 {
                     headers: {
