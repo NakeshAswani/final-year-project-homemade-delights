@@ -7,11 +7,18 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { clearCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
 import type { RootState, AppDispatch } from "@/lib/redux/store"
-import { Minus, Plus } from "lucide-react"
+import { Minus, Plus, Trash2 } from "lucide-react"
+import { useEffect, useState } from "react"
+import Loader from "../components/common/Loader"
 
 export default function CartPage() {
   const dispatch = useDispatch<AppDispatch>()
   const cartItems = useSelector((state: RootState) => state.cart.items)
+  const [pageLoading, setPageLoading] = useState(true);
+
+  useEffect(()=>{
+    cartItems ? setPageLoading(false) : null;
+  })
 
   const total = Array.isArray(cartItems)
     ? cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -24,10 +31,12 @@ export default function CartPage() {
     }
   }
 
+  if (pageLoading) return <Loader />;
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 capitalize">
       <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
-      {Array.isArray(cartItems) ?
+      {Array.isArray(cartItems) && cartItems?.length ?
         (
           <>
             <Table>
@@ -39,7 +48,7 @@ export default function CartPage() {
                   <TableHead>Total</TableHead>
                   <TableHead>
                     <Button variant='ghost' className="hover:bg-red-500" onClick={() => dispatch(clearCart())}>
-                      Clear Cart
+                      Remove Product
                     </Button>
                   </TableHead>
                 </TableRow>
@@ -81,8 +90,8 @@ export default function CartPage() {
                     </TableCell>
                     <TableCell>₹{(item.price * item.quantity).toFixed(2)}</TableCell>
                     <TableCell>
-                      <Button variant='ghost' className="hover:bg-red-500" onClick={() => dispatch(removeFromCart(item.id))}>
-                        Remove
+                      <Button variant='outline' className="hover:bg-red-500" onClick={() => dispatch(removeFromCart(item.id))}>
+                        <Trash2 />
                       </Button>
                     </TableCell>
                   </TableRow>

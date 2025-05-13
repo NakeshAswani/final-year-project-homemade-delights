@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input"
 import { ShoppingCart } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "@/lib/redux/store"
-import { addCartItem, addToCart } from "@/lib/redux/slices/cartSlice"
+import { addCart, addCartItem, addToCart } from "@/lib/redux/slices/cartSlice"
 import { fetchProducts, fetchSingleProduct } from "@/lib/redux/slices/productsSlice"
 import { useParams } from "next/navigation"
 import Loader from "@/app/components/common/Loader"
 import FeaturedProducts from "@/app/components/products/FeaturedProducts"
+import toast from 'react-hot-toast';
 
 export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
@@ -29,12 +30,20 @@ export default function ProductDetailPage() {
 
   const product = useSelector((state: RootState) => state.products.items.find((item) => item.id === id));
 
-  const handleAddToCart = () => {
-    if (product) {
-      dispatch(addToCart({ product, quantity }));
-      dispatch(addCartItem({ product_id: product.id, quantity }));
+  const handleAddToCart = async () => {
+    try {
+      const cart = await dispatch(addCart()).unwrap();
+
+      const item = product && await dispatch(
+        addCartItem({ cart_id: cart.id, product_id: product.id, quantity: 1 })
+      ).unwrap();
+
+      product && dispatch(addToCart({ product, quantity: 1 }))
+      toast.success("Added to cart!");
+    } catch (err) {
+      toast.error("Could not add to cart");
     }
-  }
+  };
 
   if (!product || loading) {
     return <Loader />;

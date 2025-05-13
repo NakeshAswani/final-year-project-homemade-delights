@@ -8,8 +8,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-32">
           {/* Brand Section */}
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold font-serif tracking-tight">
-              HomeMade<span className="text-accent-400">Delights</span>
+            <h3 className="text-2xl font-bold">
+              HomeMade Delights
             </h3>
             <p className="text-primary-200 text-sm leading-[28px]">
               Connecting food lovers with passionate home chefs since 2023. 

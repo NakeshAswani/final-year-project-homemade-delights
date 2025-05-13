@@ -33,75 +33,84 @@ const OrderCard = ({ orders }: { orders: IExtendedOrder[] }) => {
     };
 
     return (
-        <div>
-            <div className="max-w-4xl mx-auto px-4 py-6">
-                <div className="space-y-4">
-                    {
-                        Array.isArray(orders) ?
-                            orders?.map((order) => {
-                                const total = order?.orderItems.reduce((sum, item) => {
-                                    return sum + item.quantity * item.product.price;
-                                }, 0);
+        <div className="max-w-4xl mx-auto px-4 py-8 capitalize">
+            <div className="space-y-6">
+                {Array.isArray(orders) && orders?.map((order) => {
+                    const total = order?.orderItems.reduce((sum, item) => {
+                        return sum + item.quantity * item.product.price;
+                    }, 0);
 
-                                return (
-                                    <Card key={order.id}>
-                                        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                            <CardTitle className="text-base font-medium">Order #{order.id}</CardTitle>
-                                            <Badge className={statusColor(order.order_status)}>{order.order_status}</Badge>
-                                        </CardHeader>
-                                        <Separator />
-                                        <CardContent className="text-sm space-y-2">
-                                            <div>
-                                                <span className="font-medium">Items:</span>
-                                                <ul className="list-disc list-inside">
-                                                    {order?.orderItems?.length &&
-                                                        order?.orderItems?.map((item, i) => (
-                                                            <div className="flex items-center my-2" key={i}>
-                                                                <div className="flex items-center">
-                                                                    <img
-                                                                        src={item.product.image}
-                                                                        alt={item.product.name}
-                                                                        className="w-10 h-10 rounded-md mr-2"
-                                                                    />
-                                                                    <span className="font-medium">{item.product.name}</span>
-                                                                </div>
-                                                                <div className="flex items-center ml-auto">
-                                                                    <span>
-                                                                        {item.quantity} x {item.product.price}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                </ul>
-                                                <div className="flex items-center justify-end mt-4">
-                                                    <span className="font-medium text-right">Total:</span> ₹{total.toFixed(2)}
-                                                </div>
-                                            </div>
-                                            {user_role === "SELLER" && (
-                                                <div className="mt-4">
-                                                    <label htmlFor={`status-${order.id}`} className="font-medium">
-                                                        Update Status:
-                                                    </label>
-                                                    <select
-                                                        id={`status-${order.id}`}
-                                                        className="ml-2 border rounded p-1"
-                                                        value={order.order_status}
-                                                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                                                    >
-                                                        <option value="PENDING">Pending</option>
-                                                        <option value="APPROVED">Approved</option>
-                                                        <option value="DELIVERED">Delivered</option>
-                                                        <option value="CANCELLED">Cancelled</option>
-                                                    </select>
-                                                </div>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })
-                            : null
-                    }
-                </div>
+                    return (
+                        <Card key={order.id} className="shadow-lg hover:shadow-xl transition-shadow duration-200">
+                            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 bg-gray-50">
+                                <CardTitle className="text-lg font-semibold text-gray-800">Order ID: {order.id}</CardTitle>
+                                <Badge
+                                    className={`${statusColor(order.order_status)} rounded-full px-3 py-1 uppercase tracking-wide text-xs font-semibold`}
+                                >
+                                    {order.order_status}
+                                </Badge>
+                            </CardHeader>
+                            <Separator className="bg-gray-100" />
+                            <CardContent className="px-6 py-4 space-y-4">
+                                <div>
+                                    <h3 className="font-medium text-gray-700 mb-3">Items:</h3>
+                                    <ul className="space-y-4">
+                                        {order?.orderItems?.length &&
+                                            order?.orderItems?.map((item, i) => (
+                                                <li
+                                                    key={i}
+                                                    className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <div className="flex items-center space-x-4">
+                                                        <img
+                                                            src={item.product.image}
+                                                            alt={item.product.name}
+                                                            className="w-12 h-12 rounded-lg border object-cover"
+                                                        />
+                                                        <span className="font-semibold text-gray-800">{item.product.name}</span>
+                                                    </div>
+                                                    <div className="text-gray-600">
+                                                        <span className="font-medium">
+                                                            {item.quantity} × ₹{item.product.price.toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                    </ul>
+                                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+                                        <span className="font-medium text-gray-700">Total:</span>
+                                        <span className="text-lg font-semibold text-gray-900">₹{total.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                {user_role === "SELLER" && (
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                            <label
+                                                htmlFor={`status-${order.id}`}
+                                                className="font-medium text-gray-700"
+                                            >
+                                                Update Order Status:
+                                            </label>
+                                            <select
+                                                id={`status-${order.id}`}
+                                                className="w-full sm:w-48 border-gray-300 rounded-md shadow-sm px-4 py-2 
+                                                          focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                                                          transition-all text-sm"
+                                                value={order.order_status}
+                                                onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                                            >
+                                                <option value="PENDING">Pending</option>
+                                                <option value="APPROVED">Approved</option>
+                                                <option value="DELIVERED">Delivered</option>
+                                                <option value="CANCELLED">Cancelled</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
         </div>
     );

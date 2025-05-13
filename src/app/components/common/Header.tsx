@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { ShoppingCart, Menu, X, LogOut } from "lucide-react";
@@ -11,12 +10,12 @@ import type { RootState, AppDispatch } from "@/lib/redux/store";
 import logo from "../../../../public/Logo.png";
 import { logoutUser } from "@/lib/redux/slices/authSlice";
 import Cookies from "js-cookie";
+import { fetchCartItems } from "@/lib/redux/slices/cartSlice";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
 
   const user = useSelector((state: RootState) => state.auth.user);
   const cartItemCount = useSelector((state: RootState) =>
@@ -28,13 +27,14 @@ export default function Header() {
   const user_role = userData?.data?.role;
 
   useEffect(() => {
+    dispatch(fetchCartItems());
     setIsHydrated(true);
   }, []);
 
   // Logout handler
   const handleLogout = () => {
     dispatch(logoutUser()); // Clear Redux user state
-    router.push("/signin"); // Redirect to signin page
+    window.location.href = "/signin";
   };
 
   const navigation = useMemo(() => {

@@ -16,14 +16,14 @@ export const POST = async (request: NextRequest) => {
         const user = await prisma.user.findUnique({ where: { id: user_id } });
         if (!user) return handleResponse(400, "User not found");
 
-        let cart = await prisma.cart.findFirst({ where: { user_id } });
+        const cart = await prisma.cart.findFirst({ where: { user_id } });
 
-        if (user.role === "BUYER" && user.is_active && !cart) {
+        if (user.role === "BUYER" && !cart) {
             await prisma.cart.create({ data: { user_id } });
             return handleResponse(201, "Cart created successfully");
         }
 
-        return handleResponse(400, "You can't create cart");
+        return handleResponse(200, "Cart Already Exist", cart);
     } catch (error: any) {
         return handleResponse(500, error.message);
     }

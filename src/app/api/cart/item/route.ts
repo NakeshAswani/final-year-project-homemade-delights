@@ -26,19 +26,19 @@ export const POST = async (request: NextRequest) => {
         const existingCartItem = await prisma.cartItem.findFirst({
             where: { cart_id: cart.id, product_id }
         });
-
+        let res;
         if (existingCartItem) {
-            await prisma.cartItem.update({
+            res = await prisma.cartItem.update({
                 where: { id: existingCartItem.id },
                 data: { quantity: existingCartItem.quantity + (quantity || 1) }
             });
         } else {
-            await prisma.cartItem.create({
+            res = await prisma.cartItem.create({
                 data: { cart_id: cart.id, product_id, quantity: quantity || 1 }
             });
         }
 
-        return handleResponse(201, "Item added successfully");
+        return handleResponse(201, "Item added successfully", res);
     } catch (error: any) {
         return handleResponse(500, error.message);
     }

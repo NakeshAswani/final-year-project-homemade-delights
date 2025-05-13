@@ -3,7 +3,7 @@ import Link from "next/link"
 import { useDispatch, useSelector } from "react-redux"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { addCartItem, addToCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
+import { addCart, addCartItem, addToCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
 import type { AppDispatch, RootState } from "@/lib/redux/store"
 import { Minus, Plus } from "lucide-react"
 import Cookies from "js-cookie"
@@ -11,20 +11,31 @@ import { deleteProduct } from "@/lib/redux/slices/productsSlice"
 import { useState } from "react";
 import AddProductModal from "./AddProductModal";
 import { IExtendedProduct } from "@/lib/interfaces"
+import toast from 'react-hot-toast';
 
 export default function ProductCard({ product }: { product: IExtendedProduct }) {
   const dispatch = useDispatch<AppDispatch>()
-  const cartItem = useSelector((state: RootState) => state.cart.items.find((item) => item.id === product.id))
+  const cartItem = useSelector((state: RootState) => state.cart.items && state.cart.items.find((item) => item.id === product.id))
   const userCookie = JSON.parse(Cookies.get("user") || "{}");
   const user_role = userCookie?.data?.role;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<IExtendedProduct | null>(null);
 
-  const handleAddToCart = () => {
-    dispatch(addToCart({ product, quantity: 1 }))
-    dispatch(addCartItem({ product_id: product.id, quantity: 1 }))
-  }
+  const handleAddToCart = async () => {
+    try {
+      const cart = await dispatch(addCart()).unwrap();
+
+      const item = await dispatch(
+        addCartItem({ cart_id: cart.id, product_id: product.id, quantity: 1 })
+      ).unwrap();
+
+      dispatch(addToCart({ product, quantity: 1 }))
+      toast.success("Added to cart!");
+    } catch (err) {
+      toast.error("Could not add to cart");
+    }
+  };
 
   const handleUpdateQuantity = (newQuantity: number) => {
     if (newQuantity > 0) {

@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 import { Product } from "@prisma/client";
 
 const initialState: CartState = {
-  items: [],
+  items: null,
   loading: false,
   error: null,
 };
@@ -25,7 +25,11 @@ export const fetchCartItems = createAsyncThunk<CartItem[], void, { rejectValue: 
         },
       });
 
-      const cartItems = response.data.data; // ✅
+      const cartItems = response.data.data.cartItems.map((item: any) => ({
+        ...item.product,
+        quantity: item.quantity,
+      }));
+
       return cartItems;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch cart items");
@@ -33,39 +37,42 @@ export const fetchCartItems = createAsyncThunk<CartItem[], void, { rejectValue: 
   }
 );
 
-export const addCart = createAsyncThunk<void, void, { rejectValue: string }>(
-  "cart/addCartItem",
+export const addCart = createAsyncThunk<
+  { id: number },
+  void,
+  { rejectValue: string }
+>(
+  "cart/addCart",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(`/cart?user_id=${user_id}`,
+      const response = await axiosInstance.post(
+        `/cart?user_id=${user_id}`,
         {},
-        {
-          headers: {
-            token: token, // Ensure the token is included
-          },
-        }
+        { headers: { token } }
       );
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Failed to add cart item");
+      return response.data.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Failed to create cart");
     }
   }
 );
 
-export const addCartItem = createAsyncThunk<CartItem, { product_id: number; quantity?: number }>(
-  "/cart/item/addCartItem",
-  async ({ product_id, quantity }, { rejectWithValue }) => {
+export const addCartItem = createAsyncThunk<
+  CartItem,
+  { cart_id: number; product_id: number; quantity: number },
+  { rejectValue: string }
+>(
+  "cart/addCartItem",
+  async ({ cart_id, product_id, quantity }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post("cart/item", { user_id, product_id, quantity },
-        {
-          headers: {
-            token: token, // Ensure the token is included
-          },
-        }
+      const response = await axiosInstance.post(
+        `/cart/item`,
+        { cart_id, product_id, quantity, user_id },
+        { headers: { token } }
       );
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Failed to add cart item");
+      return response.data?.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Failed to add item");
     }
   }
 );
@@ -91,18 +98,18 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, action: PayloadAction<{ product: Product; quantity: number }>) => {
-      const existingProduct = state.items.find(item => item.id === action.payload.product.id);
+      const existingProduct = state.items && state.items.find(item => item.id === action.payload.product.id);
       if (existingProduct) {
         existingProduct.quantity += action.payload.quantity;
       } else {
-        state.items.push({ ...action.payload.product, quantity: action.payload.quantity });
+        state.items && state.items.push({ ...action.payload.product, quantity: action.payload.quantity });
       }
     },
     removeFromCart: (state, action: PayloadAction<number>) => {
-      state.items = state.items.filter((item) => item.id !== action.payload);
+      state.items = state.items && state.items.filter((item) => item.id !== action.payload);
     },
     updateQuantity: (state, action: PayloadAction<{ id: number; quantity: number }>) => {
-      const item = state.items.find((item) => item.id === action.payload.id);
+      const item = state.items && state.items.find((item) => item.id === action.payload.id);
       if (item && action.payload.quantity <= 8) {
         item.quantity = action.payload.quantity;
       }
@@ -118,8 +125,12 @@ const cartSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchCartItems.fulfilled, (state, action) => {
+        console.log(action);
+
         state.loading = false;
-        state.items = action.payload;
+        const existingIds = new Set(state.items && state.items.map(item => item.id));
+        const newItems = action.payload.filter(item => !existingIds.has(item.id));
+        state.items = state.items ? [...state.items, ...newItems] : newItems;
       })
       .addCase(fetchCartItems.rejected, (state, action) => {
         state.loading = false;

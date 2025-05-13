@@ -32,7 +32,7 @@ const AddressDialog: React.FC<AddressDialogProps> = ({ open, onClose, onSelect, 
                     if (fetchAddress.fulfilled.match(result)) {
                         setAddresses(result.payload); // Update state with fetched addresses
                     } else {
-                        toast.error("Failed to fetch address");
+                        setAddresses([])
                     }
                 })
                 .catch((error) => {
@@ -121,7 +121,7 @@ const AddressDialog: React.FC<AddressDialogProps> = ({ open, onClose, onSelect, 
                                     }
                                 </div>
                                 :
-                                <div className="w-full my-4">{!addresses ? "Please Wait..." : "No Addresses Exists. Please Add New Address."}</div>
+                                <div className="w-full my-4">{!addresses || isAdding || isEditing ? "Please Wait..." : "No Addresses Exists. Please Add New Address."}</div>
                         }
 
                         {/* Add New Address Button */}

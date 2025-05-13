@@ -53,7 +53,7 @@ export interface OrderDetails {
 }
 
 export interface CartState {
-    items: CartItem[];
+    items: CartItem[] | null;
     loading: boolean;
     error: string | null;
 }

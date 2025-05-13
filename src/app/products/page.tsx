@@ -147,7 +147,7 @@ export default function ProductsPage() {
             <ProductCard key={product.id} product={product} />
           ))
         ) : (
-          <p className="text-center col-span-full">
+          <p className="text-center col-span-full capitalize mt-8 text-xl">
             No products found!
           </p>
         )}

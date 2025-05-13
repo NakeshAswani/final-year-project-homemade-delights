@@ -32,7 +32,7 @@ export default function LoginPage() {
 
     try {
       const res = await dispatch(loginUser({ email, password })).unwrap();
-      res?.role === "SELLER" ? router.push("/") : router.push("/products"); // Redirect after login success
+      res?.role === "SELLER" ? router.push("/products") : router.push("/"); // Redirect after login success
     } catch (err: any) {
       toast.error("Login failed!");
       setError(err.message || "Login failed!");

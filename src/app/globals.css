@@ -92,3 +92,14 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+table {
+  table-layout: fixed;
+  width: 200px;
+}
+
+th,
+td {
+  width: 150px;
+  overflow: hidden;
+}
