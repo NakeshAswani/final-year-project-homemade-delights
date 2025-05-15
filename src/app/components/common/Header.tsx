@@ -11,10 +11,14 @@ import logo from "../../../../public/Logo.png";
 import { logoutUser } from "@/lib/redux/slices/authSlice";
 import Cookies from "js-cookie";
 import { fetchCartItems } from "@/lib/redux/slices/cartSlice";
+import toast from "react-hot-toast";
+import { Dialog } from "@radix-ui/react-dialog";
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
   const user = useSelector((state: RootState) => state.auth.user);
@@ -32,10 +36,14 @@ export default function Header() {
   }, []);
 
   // Logout handler
-  const handleLogout = () => {
+  // const handleLogout = () => {
+
+  const confirmLogout = () => {
     dispatch(logoutUser()); // Clear Redux user state
+    toast("Logged out successfully");
     window.location.href = "/signin";
   };
+  // };
 
   const navigation = useMemo(() => {
     return (
@@ -72,7 +80,7 @@ export default function Header() {
                 <Link href="/about" className="hover:underline" onClick={() => setIsMenuOpen(false)}>About Us</Link>
               </li>
               <li>
-                <Button variant="destructive" size="sm" onClick={handleLogout}>
+                <Button variant="destructive" size="sm" onClick={() => setShowLogoutModal(true)}>
                   <LogOut />
                 </Button>
               </li>
@@ -154,6 +162,39 @@ export default function Header() {
           </div>
         )}
       </header>
+
+      {showLogoutModal && (
+        // <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        //   <div className="bg-white p-6 rounded shadow-md">
+        //     <h2 className="text-lg font-bold mb-4">Confirm Logout</h2>
+        //     <p className="mb-4">Are you sure you want to logout?</p>
+        //     <div className="flex justify-end gap-4">
+        //       <Button variant="secondary" onClick={() => setShowLogoutModal(false)}>
+        //         Cancel
+        //       </Button>
+        //       <Button variant="destructive" onClick={confirmLogout}>
+        //         Logout
+        //       </Button>
+        //     </div>
+        //   </div>
+        // </div>
+        <Dialog open={showLogoutModal} onOpenChange={setShowLogoutModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Logout</DialogTitle>
+            </DialogHeader>
+            <p className="mb-4">Are you sure you want to logout?</p>
+            <DialogFooter>
+              <Button variant="secondary" onClick={() => setShowLogoutModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmLogout}>
+                Logout
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

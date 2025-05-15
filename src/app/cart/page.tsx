@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { clearCart, removeFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
+import { clearCart, fetchCartItems, removeFromCart, removeItemFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
 import type { RootState, AppDispatch } from "@/lib/redux/store"
 import { Minus, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -16,7 +16,7 @@ export default function CartPage() {
   const cartItems = useSelector((state: RootState) => state.cart.items)
   const [pageLoading, setPageLoading] = useState(true);
 
-  useEffect(()=>{
+  useEffect(() => {
     cartItems ? setPageLoading(false) : null;
   })
 
@@ -25,11 +25,25 @@ export default function CartPage() {
     : 0;
   const handleUpdateQuantity = (id: number, newQuantity: number) => {
     if (newQuantity > 0) {
+      console.log('newQuantity', newQuantity);
       dispatch(updateQuantity({ id, quantity: newQuantity }))
     } else {
       dispatch(removeFromCart(id))
+      dispatch(removeItemFromCart({ product_id: id }))
     }
   }
+
+  const handleRemoveItem = (id: number) => {
+    console.log('id', id);
+    dispatch(removeFromCart(id))
+    dispatch(removeItemFromCart({ product_id: id }))
+      .then(() => {
+        dispatch(fetchCartItems());
+      }).catch((error) => {
+        console.error('Error removing item from cart:', error);
+      });
+  }
+
 
   if (pageLoading) return <Loader />;
 
@@ -90,7 +104,7 @@ export default function CartPage() {
                     </TableCell>
                     <TableCell>₹{(item.price * item.quantity).toFixed(2)}</TableCell>
                     <TableCell>
-                      <Button variant='outline' className="hover:bg-red-500" onClick={() => dispatch(removeFromCart(item.id))}>
+                      <Button variant='outline' className="hover:bg-red-500" onClick={() => handleRemoveItem(item.id)}>
                         <Trash2 />
                       </Button>
                     </TableCell>
