@@ -42,7 +42,7 @@ const MyOrders = () => {
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-12">My Orders</h1>
             {Array.isArray(orders) ? (
-                <OrderCard orders={orders} />
+                <OrderCard orders={orders} setOrders={setOrders} />
             ) : (
                 <div className="text-center mt-4">
                     <h2 className="text-xl font-semibold">No Orders Found</h2>
