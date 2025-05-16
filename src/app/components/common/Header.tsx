@@ -11,10 +11,12 @@ import logo from "../../../../public/Logo.png";
 import { logoutUser } from "@/lib/redux/slices/authSlice";
 import Cookies from "js-cookie";
 import { fetchCartItems } from "@/lib/redux/slices/cartSlice";
+import LogoutModal from "./LogoutModal";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
   const user = useSelector((state: RootState) => state.auth.user);
@@ -33,7 +35,8 @@ export default function Header() {
 
   // Logout handler
   const handleLogout = () => {
-    dispatch(logoutUser()); // Clear Redux user state
+    dispatch(logoutUser());
+    setLogoutModalOpen(false);
     window.location.href = "/signin";
   };
 
@@ -72,7 +75,11 @@ export default function Header() {
                 <Link href="/about" className="hover:underline" onClick={() => setIsMenuOpen(false)}>About Us</Link>
               </li>
               <li>
-                <Button variant="destructive" size="sm" onClick={handleLogout}>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setLogoutModalOpen(true)}
+                >
                   <LogOut />
                 </Button>
               </li>
@@ -154,6 +161,11 @@ export default function Header() {
           </div>
         )}
       </header>
+      <LogoutModal
+        open={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onLogout={handleLogout}
+      />
     </>
   );
 }

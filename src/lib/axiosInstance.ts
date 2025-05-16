@@ -24,6 +24,10 @@ axiosInstance.interceptors.response.use(
     },
     (error) => {
         const { response } = error;
+        if (response && (response.status === 401 || response.status === 403)) {
+            Cookies.remove('token');
+            redirect('/signin');
+        }
         return Promise.reject(error);
     }
 );

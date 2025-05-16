@@ -59,7 +59,7 @@ const CheckoutPage: React.FC = () => {
       toast.error("Please select a shipping address.");
       return;
     }
-
+    toast.loading("Placing Order...")
     setLoading(true);
 
     cartItems && total && dispatch(addOrder({
@@ -73,12 +73,17 @@ const CheckoutPage: React.FC = () => {
           dispatch(setOrder(result.payload));
           dispatch(clearCart());
           router.push("/myorders");
+          toast.dismiss();
           toast.success("Thank you for your order!");
         } else {
+          toast.dismiss();
           toast.error("Failed to place order");
         }
       })
-      .catch(() => toast.error("Failed to place order"))
+      .catch(() => {
+        toast.dismiss();
+        toast.error("Failed to place order")
+      })
       .finally(() => setLoading(false));
   };
 

@@ -185,6 +185,7 @@ const AddressDialog: React.FC<AddressDialogProps> = ({ open, onClose, onSelect, 
                                 id="pincode"
                                 name="pincode"
                                 type="number"
+                                maxLength={6}
                                 value={currentAddress.pincode || ""}
                                 onChange={(e) => setCurrentAddress({ ...currentAddress, pincode: parseInt(e.target.value, 10) })}
                                 required

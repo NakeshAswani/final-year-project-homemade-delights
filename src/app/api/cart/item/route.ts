@@ -47,6 +47,7 @@ export const POST = async (request: NextRequest) => {
 export const DELETE = async (request: NextRequest) => {
     try {
         const id = Number(request.nextUrl.searchParams.get("id"));
+        const deleteItem = request.nextUrl.searchParams.get("deleteItem");
         const token = request.headers.get("token");
 
         if (!id) return handleResponse(400, "Item id is required");
@@ -60,7 +61,7 @@ export const DELETE = async (request: NextRequest) => {
         const tokenResponse = await tokenVerification(token, cart.user_id);
         if (tokenResponse) return tokenResponse;
 
-        if (existingCartItem.quantity > 1) {
+        if (existingCartItem.quantity > 1 && deleteItem !== "true") {
             await prisma.cartItem.update({
                 where: { id },
                 data: { quantity: existingCartItem.quantity - 1 }

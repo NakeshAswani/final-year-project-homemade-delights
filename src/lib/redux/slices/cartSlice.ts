@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "@/lib/axiosInstance";
-import { CartItem, CartState } from "@/lib/interfaces";
+import { CartState, IExtendedCartItem } from "@/lib/interfaces";
 import Cookies from "js-cookie";
 import { Product } from "@prisma/client";
 
@@ -15,7 +15,7 @@ const token = user?.data?.token;
 const user_id = user?.data?.id;
 
 // Async thunk to fetch cart items
-export const fetchCartItems = createAsyncThunk<CartItem[], void, { rejectValue: string }>(
+export const fetchCartItems = createAsyncThunk<IExtendedCartItem[], void, { rejectValue: string }>(
   "cart/fetchCartItems",
   async (_, { rejectWithValue }) => {
     try {
@@ -25,8 +25,9 @@ export const fetchCartItems = createAsyncThunk<CartItem[], void, { rejectValue: 
         },
       });
 
-      const cartItems = response.data.data.cartItems.map((item: any) => ({
+      const cartItems = response.data.data.cartItems.map((item: IExtendedCartItem) => ({
         ...item.product,
+        cartItemId: item.id,
         quantity: item.quantity,
       }));
 
@@ -58,7 +59,7 @@ export const addCart = createAsyncThunk<
 );
 
 export const addCartItem = createAsyncThunk<
-  CartItem,
+  IExtendedCartItem,
   { cart_id: number; product_id: number; quantity: number },
   { rejectValue: string }
 >(
@@ -77,11 +78,11 @@ export const addCartItem = createAsyncThunk<
   }
 );
 
-export const removeItemFromCart = createAsyncThunk<CartItem, { product_id: number }>(
+export const removeItemFromCart = createAsyncThunk<IExtendedCartItem, { product_id: number, deleteItem?: boolean }>(
   "cart/item/removeFromCart",
-  async ({ product_id }, { rejectWithValue }) => {
+  async ({ product_id, deleteItem }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.delete(`cart/item?id=${product_id}`, {
+      const response = await axiosInstance.delete(`cart/item?id=${product_id}&deleteItem=${deleteItem ? "true" : "false"}`, {
         headers: {
           token: token, // Ensure the token is included
         },
@@ -125,8 +126,6 @@ const cartSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchCartItems.fulfilled, (state, action) => {
-        console.log(action);
-
         state.loading = false;
         const existingIds = new Set(state.items && state.items.map(item => item.id));
         const newItems = action.payload.filter(item => !existingIds.has(item.id));
@@ -134,6 +133,7 @@ const cartSlice = createSlice({
       })
       .addCase(fetchCartItems.rejected, (state, action) => {
         state.loading = false;
+        state.items = [];
         state.error = action.payload as string;
       });
   },

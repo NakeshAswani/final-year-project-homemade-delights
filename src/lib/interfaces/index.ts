@@ -1,4 +1,4 @@
-import { Address, Cart, Category, Order, OrderItem, Product, User } from "@prisma/client";
+import { Address, Cart, CartItem, Category, Order, OrderItem, Product, User } from "@prisma/client";
 
 export interface ProductsState {
     items: IExtendedProduct[];
@@ -6,10 +6,6 @@ export interface ProductsState {
     error: string | null;
     searchQuery: string;
     sortOrder: string;
-}
-
-export interface CartItem extends Product {
-    quantity: number;
 }
 
 export interface IExtendedUser extends User {
@@ -53,7 +49,7 @@ export interface OrderDetails {
 }
 
 export interface CartState {
-    items: CartItem[] | null;
+    items: IExtendedCartItem[] | null;
     loading: boolean;
     error: string | null;
 }
@@ -78,7 +74,7 @@ export interface AddressDialogProps {
 
 export interface IAddOrder {
     address_id: number;
-    cartItems: CartItem[];
+    cartItems: IExtendedCartItem[];
     total: number;
     name: string;
     email: string;
@@ -99,4 +95,20 @@ export interface IExtendedProduct extends Product {
     cartItems: (CartItem & {
         cart: Cart;
     })[];
+}
+
+export interface LogoutModalProps {
+    open: boolean;
+    onClose: () => void;
+    onLogout: () => void;
+}
+
+export interface IExtendedCartItem extends Product {
+    id: number
+    product?: IExtendedProduct
+    cart?: Cart;
+    product_id?: number
+    cart_id?: number
+    quantity: number
+    cartItemId?: number;
 }

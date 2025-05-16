@@ -24,6 +24,7 @@ export default function ProductCard({ product }: { product: IExtendedProduct }) 
 
   const handleAddToCart = async () => {
     try {
+      toast.loading("Please Wait...");
       const cart = await dispatch(addCart()).unwrap();
 
       const item = await dispatch(
@@ -31,13 +32,15 @@ export default function ProductCard({ product }: { product: IExtendedProduct }) 
       ).unwrap();
 
       dispatch(addToCart({ product, quantity: 1 }))
+      toast.dismiss();
       toast.success("Added to cart!");
     } catch (err) {
+      toast.dismiss();
       toast.error("Could not add to cart");
     }
   };
 
-  const handleUpdateQuantity = (newQuantity: number) => {
+  const handleUpdateQuantity = async (newQuantity: number) => {
     if (newQuantity > 0) {
       dispatch(updateQuantity({ id: product.id, quantity: newQuantity }))
     } else {
