@@ -12,13 +12,11 @@ export const POST = async (request: NextRequest) => {
             password: string,
             role: Role,
             addresses?: Array<{
-                street: string
                 city: string
                 state: string
                 country: string
                 pincode: string
                 address: string
-                isDefault?: boolean
             }>
         };
 
@@ -47,11 +45,9 @@ export const POST = async (request: NextRequest) => {
                 role,
                 addresses: {
                     create: addresses?.map(addr => ({
-                        street: addr.street,
                         city: addr.city,
                         state: addr.state,
                         pincode: Number(addr.pincode),
-                        is_default: addr.isDefault || false,
                         address: addr.address,
                         country: addr.country
                     })) || []
