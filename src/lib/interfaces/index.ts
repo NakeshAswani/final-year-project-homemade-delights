@@ -14,6 +14,7 @@ export interface IExtendedUser extends User {
     carts: Cart[];
     orders: Order[];
     addresses: Address[];
+    token: string
 }
 
 export interface AuthState {

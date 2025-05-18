@@ -9,7 +9,7 @@ const initialState = {
 };
 
 const user = JSON.parse(Cookies.get("user") || "{}");
-const user_token = user?.data?.token;
+const user_token = user?.token;
 
 export const addCategory = createAsyncThunk(
   "category/addCategory",

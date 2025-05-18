@@ -26,7 +26,7 @@ export default function Header() {
 
   const UserCookies = Cookies.get("user");
   const userData = UserCookies ? JSON.parse(UserCookies) : null;
-  const user_role = userData?.data?.role;
+  const user_role = userData?.role;
 
   useEffect(() => {
     dispatch(fetchCartItems());

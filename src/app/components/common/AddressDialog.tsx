@@ -23,7 +23,7 @@ const AddressDialog: React.FC<AddressDialogProps> = ({ open, onClose, onSelect, 
         return null;
     }
     const user = JSON.parse(userCookie);
-    const userId = user?.data?.id;
+    const userId = user?.id;
 
     useEffect(() => {
         if (open) {

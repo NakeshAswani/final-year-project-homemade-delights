@@ -12,7 +12,7 @@ const initialState = {
 };
 
 const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-const token = user?.data?.token;
+const token = user?.token;
 
 export const fetchAddress = createAsyncThunk<Address[], number, { rejectValue: string }>(
     "address/fetchAddress",

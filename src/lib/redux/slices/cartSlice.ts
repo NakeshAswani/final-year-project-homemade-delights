@@ -11,8 +11,8 @@ const initialState: CartState = {
 };
 
 const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-const token = user?.data?.token;
-const user_id = user?.data?.id;
+const token = user?.token;
+const user_id = user?.id;
 
 // Async thunk to fetch cart items
 export const fetchCartItems = createAsyncThunk<IExtendedCartItem[], void, { rejectValue: string }>(

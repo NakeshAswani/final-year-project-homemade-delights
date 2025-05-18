@@ -17,7 +17,7 @@ export default function ProductCard({ product }: { product: IExtendedProduct }) 
   const dispatch = useDispatch<AppDispatch>()
   const cartItem = useSelector((state: RootState) => state.cart.items && state.cart.items.find((item) => item.id === product.id))
   const userCookie = JSON.parse(Cookies.get("user") || "{}");
-  const user_role = userCookie?.data?.role;
+  const user_role = userCookie?.role;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<IExtendedProduct | null>(null);

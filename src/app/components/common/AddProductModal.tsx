@@ -35,7 +35,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, prod
 
     const UserCookies = Cookies.get("user");
     const userData = UserCookies ? JSON.parse(UserCookies) : null;
-    const user_id = userData?.data?.id;
+    const user_id = userData?.id;
 
     useEffect(() => {
         if (isOpen) {

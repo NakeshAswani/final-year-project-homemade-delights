@@ -36,7 +36,7 @@ const CheckoutPage: React.FC = () => {
       return;
     }
 
-    const user = JSON.parse(userCookie)?.data as IExtendedUser;
+    const user = JSON.parse(userCookie) as IExtendedUser;
     const { name, email, addresses } = user;
 
     setFormData({ name, email });

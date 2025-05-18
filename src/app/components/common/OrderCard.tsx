@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 const OrderCard = ({ orders, setOrders }: { orders: IExtendedOrder[]; setOrders: any }) => {
     const dispatch = useDispatch<AppDispatch>();
     const user = JSON.parse(Cookies.get("user") || "");
-    const user_role = user?.data?.role;
+    const user_role = user?.role;
 
     const statusColor = (status: string) => {
         switch (status) {
@@ -34,7 +34,7 @@ const OrderCard = ({ orders, setOrders }: { orders: IExtendedOrder[]; setOrders:
             toast.loading("Please Wait...");
             await dispatch(updateOrderStatus({ order_id: orderId, order_status: newStatus }));
             const user = JSON?.parse(Cookies.get("user") || "");
-            const userId = user?.data?.id;
+            const userId = user?.id;
             if (userId) {
                 const newOrders = await dispatch(fetchOrder(userId));
                 if (newOrders?.payload?.length) {

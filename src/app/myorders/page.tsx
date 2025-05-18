@@ -18,7 +18,7 @@ const MyOrders = () => {
 
     useEffect(() => {
         const user = JSON?.parse(Cookies.get("user") || "");
-        const userId = user?.data?.id;
+        const userId = user?.id;
         if (!userId) {
             router.push("/signin");
             return;

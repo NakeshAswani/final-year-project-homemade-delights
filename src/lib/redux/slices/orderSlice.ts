@@ -15,8 +15,8 @@ const initialState = {
 };
 
 const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-const token = user?.data?.token;
-const userId = user?.data?.id;
+const token = user?.token;
+const userId = user?.id;
 
 export const fetchOrder = createAsyncThunk<Order[], number, { rejectValue: string }>(
     "order/fetchOrder",

@@ -12,9 +12,9 @@ const initialState: ProductsState = {
 };
 
 const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-const user_role = user?.data?.role;
-const user_id = user?.data?.id;
-const token = user?.data?.token;
+const user_role = user?.role;
+const user_id = user?.id;
+const token = user?.token;
 
 export const fetchProducts = createAsyncThunk<IExtendedProduct[], void, { rejectValue: string }>(
   "products/fetchProducts",

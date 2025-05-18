@@ -17,7 +17,6 @@ export const POST = async (request: NextRequest) => {
         const user_id = Number(formData.get('user_id'));
         const name = formData.get('name') as string;
         const description = formData.get('description') as string;
-        const image = formData.get('image') as File | null;
 
         const tokenResponse = await tokenVerification(token, user_id);
         if (tokenResponse) return tokenResponse;
@@ -26,19 +25,7 @@ export const POST = async (request: NextRequest) => {
         if (!user) return handleResponse(404, "User not found");
         if (user.role !== "SELLER" || !user.is_active) return handleResponse(403, "Forbidden: You cannot add categories");
 
-        if (!image) return handleResponse(400, "Image file is required");
-
-        const buffer = Buffer.from(await image.arrayBuffer());
-        const upload = await new Promise<any>((resolve, reject) => {
-            cloudinary.uploader.upload_stream({ resource_type: "image" }, (error, result) => {
-                if (error) reject(error);
-                else resolve(result);
-            }).end(buffer);
-        });
-
-        const upload_url = cloudinary.url(upload.public_id, { transformation: { quality: "auto", fetch_format: "auto" } });
-
-        await prisma.category.create({ data: { user_id, name, description, image: upload_url } });
+        await prisma.category.create({ data: { user_id, name, description, image: "" } });
 
         return handleResponse(201, "Category added successfully");
     } catch (error: any) {
