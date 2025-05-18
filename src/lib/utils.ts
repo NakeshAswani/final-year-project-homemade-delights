@@ -11,8 +11,8 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Utility function for consistent JSON responses with HTTP status codes.
  */
-export const handleResponse = (status: number, message: string, data: any = null) => {
-  return NextResponse.json({ status, message, data }, { status });
+export const handleResponse = (status: number, message: string, data?: any) => {
+  return data ? NextResponse.json({ status, message, data }, { status }) : NextResponse.json({ status, message }, { status });
 };
 
 /**

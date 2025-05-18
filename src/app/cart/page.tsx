@@ -5,11 +5,12 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { clearCart, fetchCartItems, removeFromCart, removeItemFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
+import { fetchCartItems, removeFromCart, removeItemFromCart, updateQuantity } from "@/lib/redux/slices/cartSlice"
 import type { RootState, AppDispatch } from "@/lib/redux/store"
 import { Minus, Plus, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import Loader from "../components/common/Loader"
+import toast from 'react-hot-toast';
 
 export default function CartPage() {
   const dispatch = useDispatch<AppDispatch>()
@@ -17,33 +18,51 @@ export default function CartPage() {
   const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
-    cartItems ? setPageLoading(false) : null;
-  })
+    dispatch(fetchCartItems()).finally(() => setPageLoading(false));
+  }, [])
 
   const total = Array.isArray(cartItems)
     ? cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
     : 0;
-  const handleUpdateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity > 0) {
-      console.log('newQuantity', newQuantity);
-      dispatch(updateQuantity({ id, quantity: newQuantity }))
+
+  const handleUpdateQuantity = (id: number, newQuantity: number, cartItemId?: number) => {
+    if (cartItemId) {
+      try {
+        if (newQuantity > 0) {
+          dispatch(updateQuantity({ id, quantity: newQuantity }))
+        } else {
+          dispatch(removeFromCart(id))
+          dispatch(removeItemFromCart({ product_id: cartItemId, deleteItem: true }))
+        }
+      } catch (error) {
+        toast.error("Unable To Update Quantity!")
+      }
     } else {
-      dispatch(removeFromCart(id))
-      dispatch(removeItemFromCart({ product_id: id }))
+      toast.error("Unable To Update Quantity!")
     }
   }
 
-  const handleRemoveItem = (id: number) => {
-    console.log('id', id);
-    dispatch(removeFromCart(id))
-    dispatch(removeItemFromCart({ product_id: id }))
-      .then(() => {
-        dispatch(fetchCartItems());
-      }).catch((error) => {
-        console.error('Error removing item from cart:', error);
-      });
-  }
+  const handleRemoveItem = (id: number, cartItemId?: number) => {
+    if (cartItemId) {
+      const toastId = toast.loading("Please Wait...");
 
+      dispatch(removeItemFromCart({ product_id: cartItemId, deleteItem: true }))
+        .then((result) => {
+          if (removeItemFromCart.rejected.match(result)) {
+            toast.error("Failed to remove item", { id: toastId });
+            return;
+          }
+
+          dispatch(fetchCartItems())
+            .then(() => {
+              dispatch(removeFromCart(id));
+              toast.success("Item Removed From Cart!", { id: toastId });
+            })
+        });
+    } else {
+      toast.error("Failed to remove item");
+    }
+  };
 
   if (pageLoading) return <Loader />;
 
@@ -60,18 +79,13 @@ export default function CartPage() {
                   <TableHead>Price</TableHead>
                   <TableHead>Quantity</TableHead>
                   <TableHead>Total</TableHead>
-                  <TableHead>
-                    <Button variant='ghost' className="hover:bg-red-500" onClick={() => dispatch(clearCart())}>
-                      Remove Product
-                    </Button>
-                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {cartItems.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>
-                      <div className="flex items-center">
+                      <div className="sm:flex items-center">
                         <Image
                           src={item.image || "/placeholder.svg"}
                           alt={item.name}
@@ -88,7 +102,7 @@ export default function CartPage() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity - 1, item.cartItemId)}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -96,7 +110,7 @@ export default function CartPage() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1, item.cartItemId)}
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -104,7 +118,7 @@ export default function CartPage() {
                     </TableCell>
                     <TableCell>₹{(item.price * item.quantity).toFixed(2)}</TableCell>
                     <TableCell>
-                      <Button variant='outline' className="hover:bg-red-500" onClick={() => handleRemoveItem(item.id)}>
+                      <Button variant='outline' className="hover:bg-red-500" onClick={() => handleRemoveItem(item.id, item.cartItemId)}>
                         <Trash2 />
                       </Button>
                     </TableCell>

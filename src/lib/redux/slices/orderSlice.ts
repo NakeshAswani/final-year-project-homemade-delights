@@ -70,8 +70,8 @@ export const updateOrderStatus = createAsyncThunk(
     async ({ order_id, order_status }: { order_id: number; order_status: string }, { rejectWithValue }: { rejectWithValue: (value: string) => void }) => {
         try {
             const response = await axiosInstance.put(
-                `/order/${order_id}`,
-                { status: order_status },
+                `/order`,
+                { order_id, status: order_status },
                 {
                     headers: {
                         token: token, // Ensure the token is included
@@ -86,8 +86,7 @@ export const updateOrderStatus = createAsyncThunk(
             return rejectWithValue(error.response?.data?.message || "Failed to update order");
         }
     }
-);
-       
+); 
 
 const orderSlice = createSlice({
     name: "order",

@@ -5,10 +5,11 @@ import React from 'react';
 import Cookies from 'js-cookie';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/lib/redux/store';
-import { updateOrderStatus } from '@/lib/redux/slices/orderSlice';
+import { fetchOrder, updateOrderStatus } from '@/lib/redux/slices/orderSlice';
 import { IExtendedOrder } from '@/lib/interfaces';
+import toast from 'react-hot-toast';
 
-const OrderCard = ({ orders }: { orders: IExtendedOrder[] }) => {
+const OrderCard = ({ orders, setOrders }: { orders: IExtendedOrder[]; setOrders: any }) => {
     const dispatch = useDispatch<AppDispatch>();
     const user = JSON.parse(Cookies.get("user") || "");
     const user_role = user?.data?.role;
@@ -28,8 +29,30 @@ const OrderCard = ({ orders }: { orders: IExtendedOrder[] }) => {
         }
     };
 
-    const handleStatusChange = (orderId: number, newStatus: string) => {
-        dispatch(updateOrderStatus({ order_id: orderId, order_status: newStatus }));
+    const handleStatusChange = async (orderId: number, newStatus: string) => {
+        try {
+            toast.loading("Please Wait...");
+            await dispatch(updateOrderStatus({ order_id: orderId, order_status: newStatus }));
+            const user = JSON?.parse(Cookies.get("user") || "");
+            const userId = user?.data?.id;
+            if (userId) {
+                const newOrders = await dispatch(fetchOrder(userId));
+                if (newOrders?.payload?.length) {
+                    setOrders(newOrders?.payload);
+                    toast.dismiss();
+                    toast.success("Status Updated!");
+                } else {
+                    toast.dismiss();
+                    toast.error("Unable To Update Order Status!");
+                }
+            } else {
+                toast.dismiss();
+                toast.error("Unable To Update Order Status!");
+            }
+        } catch (error) {
+            toast.dismiss();
+            toast.error("Unable To Update Order Status!");
+        }
     };
 
     return (
@@ -82,7 +105,7 @@ const OrderCard = ({ orders }: { orders: IExtendedOrder[] }) => {
                                         <span className="text-lg font-semibold text-gray-900">₹{total.toFixed(2)}</span>
                                     </div>
                                 </div>
-                                {user_role === "SELLER" && (
+                                {user_role !== "SELLER" && (
                                     <div className="pt-4 border-t border-gray-100">
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                             <label
