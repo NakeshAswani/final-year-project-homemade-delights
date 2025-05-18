@@ -1,3 +1,5 @@
+"use client";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +10,7 @@ import { AppDispatch } from '@/lib/redux/store';
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import toast from "react-hot-toast";
+import Cookies from 'js-cookie';
 
 const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onClose }) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -30,12 +33,19 @@ const AddCategoryModal: React.FC<AddCategoryModalProps> = ({ isOpen, onClose }) 
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
+        const user = JSON?.parse(Cookies.get("user") || "");
+        const userId = user?.data?.id;
+        if (!userId) {
+            toast.error("User Not Found. Please Login Again.")
+            return;
+        }
         e.preventDefault();
         setLoading(true);
 
         const data = new FormData();
         data.append("name", formData.name);
         data.append("description", formData.description);
+        data.append("user_id", userId);
         if (formData.image) data.append("image", formData.image);
 
         try {

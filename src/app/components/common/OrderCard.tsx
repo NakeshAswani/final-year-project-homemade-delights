@@ -105,7 +105,7 @@ const OrderCard = ({ orders, setOrders }: { orders: IExtendedOrder[]; setOrders:
                                         <span className="text-lg font-semibold text-gray-900">₹{total.toFixed(2)}</span>
                                     </div>
                                 </div>
-                                {user_role !== "SELLER" && (
+                                {user_role === "SELLER" && (
                                     <div className="pt-4 border-t border-gray-100">
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                             <label
