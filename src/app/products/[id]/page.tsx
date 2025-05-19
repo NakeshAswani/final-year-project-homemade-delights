@@ -10,16 +10,19 @@ import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "@/lib/redux/store"
 import { addCart, addCartItem, addToCart } from "@/lib/redux/slices/cartSlice"
 import { fetchProducts, fetchSingleProduct } from "@/lib/redux/slices/productsSlice"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import Loader from "@/app/components/common/Loader"
 import FeaturedProducts from "@/app/components/products/FeaturedProducts"
 import toast from 'react-hot-toast';
+import Cookies from "js-cookie"
 
 export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const dispatch = useDispatch<AppDispatch>();
-  const [cartLoader, setCartLoader] = useState(false);
   const id = Number(useParams().id);
+  const userCookie = JSON.parse(Cookies.get("user") || "{}");
+  const user_role = userCookie?.role;
+  const router = useRouter();
 
   const { items: products, loading } = useSelector((state: RootState) => state.products);
 
@@ -33,6 +36,11 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = async () => {
     try {
+      if(!user_role){
+        toast.error("Please Login First.");
+        router.push("/signin");
+        return;
+      }
       toast.loading("Adding To Cart...")
       const cart = await dispatch(addCart()).unwrap();
 

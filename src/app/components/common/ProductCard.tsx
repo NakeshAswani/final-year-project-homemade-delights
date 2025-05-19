@@ -12,18 +12,25 @@ import { useState } from "react";
 import AddProductModal from "./AddProductModal";
 import { IExtendedProduct } from "@/lib/interfaces"
 import toast from 'react-hot-toast';
+import { useRouter } from "next/navigation"
 
 export default function ProductCard({ product }: { product: IExtendedProduct }) {
   const dispatch = useDispatch<AppDispatch>()
   const cartItem = useSelector((state: RootState) => state.cart.items && state.cart.items.find((item) => item.id === product.id))
   const userCookie = JSON.parse(Cookies.get("user") || "{}");
   const user_role = userCookie?.role;
+  const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<IExtendedProduct | null>(null);
 
   const handleAddToCart = async () => {
     try {
+      if(!user_role){
+        toast.error("Please Login First.");
+        router.push("/signin");
+        return;
+      }
       toast.loading("Please Wait...");
       const cart = await dispatch(addCart()).unwrap();
 

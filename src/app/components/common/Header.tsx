@@ -29,7 +29,7 @@ export default function Header() {
   const user_role = userData?.role;
 
   useEffect(() => {
-    dispatch(fetchCartItems());
+    user_role && user_role !== "SELLER" ? dispatch(fetchCartItems()) : null;
     setIsHydrated(true);
   }, []);
 
