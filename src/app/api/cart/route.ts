@@ -19,8 +19,8 @@ export const POST = async (request: NextRequest) => {
         const cart = await prisma.cart.findFirst({ where: { user_id } });
 
         if (user.role === "BUYER" && !cart) {
-            await prisma.cart.create({ data: { user_id } });
-            return handleResponse(201, "Cart created successfully");
+            const cart = await prisma.cart.create({ data: { user_id } });
+            return handleResponse(201, "Cart created successfully", cart);
         }
 
         return handleResponse(200, "Cart Already Exist", cart);

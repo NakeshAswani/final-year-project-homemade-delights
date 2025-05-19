@@ -84,7 +84,6 @@ export default function RegisterPage() {
 
       await axiosInstance.post("/auth/signup", payload);
       toast.success("Registration successful!");
-      dispatch(addCart());
       setTimeout(() => router.push("/signin"), 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed!");

@@ -5,20 +5,19 @@ import Cookies from "js-cookie";
 import { Product } from "@prisma/client";
 
 const initialState: CartState = {
-  items: null,
+  items: [],
   loading: false,
   error: null,
 };
-
-const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-const token = user?.token;
-const user_id = user?.id;
 
 // Async thunk to fetch cart items
 export const fetchCartItems = createAsyncThunk<IExtendedCartItem[], void, { rejectValue: string }>(
   "cart/fetchCartItems",
   async (_, { rejectWithValue }) => {
     try {
+      const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+      const token = user?.token;
+      const user_id = user?.id;
       const response = await axiosInstance.get(`/cart?user_id=${user_id}`, {
         headers: {
           token: token,
@@ -46,6 +45,9 @@ export const addCart = createAsyncThunk<
   "cart/addCart",
   async (_, { rejectWithValue }) => {
     try {
+      const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+      const token = user?.token;
+      const user_id = user?.id;
       const response = await axiosInstance.post(
         `/cart?user_id=${user_id}`,
         {},
@@ -66,6 +68,9 @@ export const addCartItem = createAsyncThunk<
   "cart/addCartItem",
   async ({ cart_id, product_id, quantity }, { rejectWithValue }) => {
     try {
+      const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+      const token = user?.token;
+      const user_id = user?.id;
       const response = await axiosInstance.post(
         `/cart/item`,
         { cart_id, product_id, quantity, user_id },
@@ -82,6 +87,9 @@ export const removeItemFromCart = createAsyncThunk<IExtendedCartItem, { product_
   "cart/item/removeFromCart",
   async ({ product_id, deleteItem }, { rejectWithValue }) => {
     try {
+      const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+      const token = user?.token;
+      const user_id = user?.id;
       const response = await axiosInstance.delete(`cart/item?id=${product_id}&deleteItem=${deleteItem ? "true" : "false"}`, {
         headers: {
           token: token, // Ensure the token is included
