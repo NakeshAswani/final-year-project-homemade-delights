@@ -96,6 +96,7 @@ export interface IExtendedProduct extends Product {
     cartItems: (CartItem & {
         cart: Cart;
     })[];
+    category: Category
 }
 
 export interface LogoutModalProps {

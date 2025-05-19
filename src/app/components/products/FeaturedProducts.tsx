@@ -7,11 +7,11 @@ export default function FeaturedProducts({ products }: { products: IExtendedProd
     
     return (
         <section>
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-semibold">Featured Products</h2>
+            <div className="flex justify-between items-center mb-6 gap-4">
+                <h2 className="md:text-3xl sm:text-2xl text-xl font-semibold">Featured Products</h2>
                 <Link
                     href="/products"
-                    className="text-primary hover:text-blue-500 hover:underline transition-colors flex items-center gap-2"
+                    className="text-blue-500 sm:text-sm text-xs underline transition-colors flex items-center gap-2"
                 >
                     View All Products
                     <span aria-hidden="true">→</span>

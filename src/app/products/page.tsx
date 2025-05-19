@@ -10,75 +10,99 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { fetchProducts, setSearchQuery, setSortOrder } from "@/lib/redux/slices/productsSlice";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import {
+  fetchProducts,
+  setSearchQuery,
+  setSortOrder,
+} from "@/lib/redux/slices/productsSlice";
 import type { AppDispatch, RootState } from "@/lib/redux/store";
 import ProductCard from "@/app/components/common/ProductCard";
 import Loader from "../components/common/Loader";
 import Cookies from "js-cookie";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { capitalizeWords } from "@/lib/utils";
 import AddProductModal from "../components/common/AddProductModal";
 import AddCategoryModal from "../components/common/AddCategoryModal";
-import { capitalizeWords } from "@/lib/utils";
 
 export default function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { items: products = [], loading, error, searchQuery, sortOrder } = useSelector(
-    (state: RootState) => state.products
-  );
+  const { items: products = [], loading, error, searchQuery, sortOrder } =
+    useSelector((state: RootState) => state.products);
+
+  // New local state for city & category
   const [selectedCity, setSelectedCity] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>("all");
+
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
-  const UserCookies = Cookies.get("user");
-  const userData = UserCookies ? JSON.parse(UserCookies) : null;
-  const user_role = userData?.role;
+  const userData = Cookies.get("user")
+    ? JSON.parse(Cookies.get("user")!)
+    : null;
+  const userRole = userData?.role;
 
   useEffect(() => {
     if (!products.length) dispatch(fetchProducts());
-  }, [dispatch, products?.length]);
+  }, [dispatch, products.length]);
 
-  // Extract _only_ the city names from the first address of each user
+  // Build unique lists
   const cities = Array.from(
     new Set(
       products
-        .map((p) => p.user.addresses?.[0]?.city) // grab .city
+        .map((p) => p.user.addresses?.[0]?.city)
+        .filter((c): c is string => Boolean(c))
+    )
+  );
+
+  const categories = Array.from(
+    new Set(
+      products
+        .map((p) => p.category?.name)
         .filter((c): c is string => Boolean(c))
     )
   );
 
   // Handlers
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     dispatch(setSearchQuery(e.target.value));
-  };
-  const handleSortChange = (value: string) => {
+
+  const handleSortChange = (value: string) =>
     dispatch(setSortOrder(value));
-  };
-  const handleCityChange = (value: string) => {
+
+  const handleCityChange = (value: string) =>
     setSelectedCity(value);
+
+  const handleCategoryChange = (value: string) =>
+    setSelectedCategory(value);
+
+  const handleResetFilters = () => {
+    dispatch(setSearchQuery(""));
+    dispatch(setSortOrder(""));
+    setSelectedCity("all");
+    setSelectedCategory("all");
   };
 
-  // Apply search, city-filter, then sort
+  // Apply: search → city → category → sort (price only)
   const filteredProducts = products
-    .filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((p) =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     .filter((p) =>
       selectedCity === "all"
         ? true
         : p.user.addresses?.[0]?.city === selectedCity
     )
+    .filter((p) =>
+      selectedCategory === "all"
+        ? true
+        : p.category?.name === selectedCategory
+    )
     .sort((a, b) => {
-      switch (sortOrder) {
-        case "price-low-high":
-          return a.price - b.price;
-        case "price-high-low":
-          return b.price - a.price;
-        case "name-a-z":
-          return a.name.localeCompare(b.name);
-        case "name-z-a":
-          return b.name.localeCompare(a.name);
-        default:
-          return 0;
-      }
+      if (sortOrder === "price-low-high") return a.price - b.price;
+      if (sortOrder === "price-high-low") return b.price - a.price;
+      return 0;
     });
 
   if (loading) return <Loader />;
@@ -86,15 +110,15 @@ export default function ProductsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">All Products</h1>
+
       {/* Seller Actions */}
-      {user_role === "SELLER" && (
+      {userRole === "SELLER" && (
         <div className="flex gap-3 mb-4">
           <Button onClick={() => setIsProductModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Product
           </Button>
           <Button
-            variant="outline"
             onClick={() => setIsCategoryModalOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -103,8 +127,9 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Search, Sort & Filter */}
-      <div className="flex flex-col md:flex-row justify-start items-center mb-6 gap-4">
+      {/* Search, Sort & Filters */}
+      <div className="grid grid-cols-2 md:grid-cols-4 justify-start max-w-max mb-4 gap-4">
+        {/* Search */}
         <Input
           type="search"
           placeholder="Search products..."
@@ -113,20 +138,28 @@ export default function ProductsPage() {
           onChange={handleSearchChange}
         />
 
-        <Select onValueChange={handleSortChange}>
-          <SelectTrigger className="w-full md:w-40">
-            <SelectValue placeholder="Sort by" />
+        {/* Sort by price */}
+        <Select onValueChange={handleSortChange} value={sortOrder}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Sort by Price" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="price-low-high">Price: Low to High</SelectItem>
-            <SelectItem value="price-high-low">Price: High to Low</SelectItem>
-            <SelectItem value="name-a-z">Name: A to Z</SelectItem>
-            <SelectItem value="name-z-a">Name: Z to A</SelectItem>
+            <SelectItem value="price-low-high">
+              Price: Low to High
+            </SelectItem>
+            <SelectItem value="price-high-low">
+              Price: High to Low
+            </SelectItem>
           </SelectContent>
         </Select>
 
-        <Select onValueChange={handleCityChange} defaultValue="all">
-          <SelectTrigger className="w-full md:w-40">
+        {/* Filter by City */}
+        <Select
+          onValueChange={handleCityChange}
+          defaultValue="all"
+          value={selectedCity}
+        >
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Filter by City" />
           </SelectTrigger>
           <SelectContent>
@@ -138,6 +171,32 @@ export default function ProductsPage() {
             ))}
           </SelectContent>
         </Select>
+
+        {/* Filter by Category */}
+        <Select
+          onValueChange={handleCategoryChange}
+          defaultValue="all"
+          value={selectedCategory}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Filter by Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {capitalizeWords(cat)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Reset Button */}
+      <div className="mb-6">
+        <Button variant="destructive" onClick={handleResetFilters}>
+          Reset Filters
+        </Button>
       </div>
 
       {/* Product Grid */}
@@ -152,6 +211,7 @@ export default function ProductsPage() {
           </p>
         )}
       </div>
+
       {/* Modals */}
       <AddProductModal
         isOpen={isProductModalOpen}

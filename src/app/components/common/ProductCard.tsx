@@ -76,11 +76,11 @@ export default function ProductCard({ product }: { product: IExtendedProduct }) 
         </CardContent>
         <CardFooter className="flex justify-between">
           {user_role === "SELLER" ? (
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={handleUpdate}>
+            <div className="flex gap-4 items-center w-full justify-center">
+              <Button size={"lg"} onClick={handleUpdate}>
                 Update
               </Button>
-              <Button variant="destructive" onClick={() => handleDelete(product.id)}>
+              <Button variant="destructive" size={"lg"} onClick={() => handleDelete(product.id)}>
                 Delete
               </Button>
             </div>
