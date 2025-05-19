@@ -14,14 +14,13 @@ const initialState = {
     orderDate: null,
 };
 
-const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-const token = user?.token;
-const userId = user?.id;
-
 export const fetchOrder = createAsyncThunk<Order[], number, { rejectValue: string }>(
     "order/fetchOrder",
     async (userId, { rejectWithValue }) => {
         try {
+            const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+            const token = user?.token;
+            const userId = user?.id;
             const response = await axiosInstance.get(`/order?user_id=${userId}`,
                 {
                     headers: {
@@ -46,6 +45,9 @@ export const addOrder = createAsyncThunk(
     "order/addOrder",
     async (orderData: IAddOrder, { rejectWithValue }) => {
         try {
+            const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+            const token = user?.token;
+            const userId = user?.id;
             const response = await axiosInstance.post(
                 `/order?user_id=${userId}&address_id=${orderData?.address_id}`, // Add user_id as a query parameter
                 orderData,
@@ -69,6 +71,9 @@ export const updateOrderStatus = createAsyncThunk(
     "order/updateOrder",
     async ({ order_id, order_status }: { order_id: number; order_status: string }, { rejectWithValue }: { rejectWithValue: (value: string) => void }) => {
         try {
+            const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+            const token = user?.token;
+            const userId = user?.id;
             const response = await axiosInstance.put(
                 `/order`,
                 { order_id, status: order_status },
@@ -86,7 +91,7 @@ export const updateOrderStatus = createAsyncThunk(
             return rejectWithValue(error.response?.data?.message || "Failed to update order");
         }
     }
-); 
+);
 
 const orderSlice = createSlice({
     name: "order",

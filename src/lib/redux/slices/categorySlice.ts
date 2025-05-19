@@ -8,13 +8,12 @@ const initialState = {
   error: null,
 };
 
-const user = JSON.parse(Cookies.get("user") || "{}");
-const user_token = user?.token;
-
 export const addCategory = createAsyncThunk(
   "category/addCategory",
   async (formData: FormData, { rejectWithValue }) => {
     try {
+      const user = JSON.parse(Cookies.get("user") || "{}");
+      const user_token = user?.token;
       const response = await axiosInstance.post("/category", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -34,6 +33,8 @@ export const fetchCategories = createAsyncThunk(
   "category/fetchCategories",
   async (_, { rejectWithValue }) => {
     try {
+      const user = JSON.parse(Cookies.get("user") || "{}");
+      const user_token = user?.token;
       const response = await axiosInstance.get("/category", {
         headers: {
           token: user_token,
@@ -52,6 +53,8 @@ export const updateCategory = createAsyncThunk(
   "category/updateCategory",
   async ({ id, formData }: { id: number; formData: FormData }, { rejectWithValue }) => {
     try {
+      const user = JSON.parse(Cookies.get("user") || "{}");
+      const user_token = user?.token;
       const response = await axiosInstance.put(`/category?id=${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -71,6 +74,8 @@ export const fetchCategoryById = createAsyncThunk(
   "category/fetchCategoryById",
   async (id: number, { rejectWithValue }) => {
     try {
+      const user = JSON.parse(Cookies.get("user") || "{}");
+      const user_token = user?.token;
       const response = await axiosInstance.get(`/category?id=${id}`, {
         headers: {
           token: user_token,

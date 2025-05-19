@@ -11,13 +11,12 @@ const initialState = {
     pincode: null
 };
 
-const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-const token = user?.token;
-
 export const fetchAddress = createAsyncThunk<Address[], number, { rejectValue: string }>(
     "address/fetchAddress",
     async (userId, { rejectWithValue }) => {
         try {
+            const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+            const token = user?.token;
             const response = await axiosInstance.get(`/user/address?user_id=${userId}`,
                 {
                     headers: {
@@ -43,6 +42,8 @@ export const addAddress = createAsyncThunk(
     "address/addAddress",
     async (addressData: any, { rejectWithValue }) => {
         try {
+            const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+            const token = user?.token;
             const response = await axiosInstance.post(
                 `/user/address?user_id=${addressData.user_id}`, // Add user_id as a query parameter
                 addressData,
@@ -66,6 +67,8 @@ export const deleteAddress = createAsyncThunk(
     "address/deleteAddress",
     async (addressId: number, { rejectWithValue }) => {
         try {
+            const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+            const token = user?.token;
             const response = await axiosInstance.delete(`/user/address?id=${addressId}`, {
                 headers: {
                     token: token, // Ensure the token is included
@@ -85,6 +88,8 @@ export const updatingAddress = createAsyncThunk(
     "address/updateAddress",
     async (addressData: any, { rejectWithValue }) => {
         try {
+            const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+            const token = user?.token;
             const response = await axiosInstance.put(
                 '/user/address',
                 addressData,

@@ -11,15 +11,14 @@ const initialState: ProductsState = {
   sortOrder: "",
 };
 
-const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
-const user_role = user?.role;
-const user_id = user?.id;
-const token = user?.token;
-
 export const fetchProducts = createAsyncThunk<IExtendedProduct[], void, { rejectValue: string }>(
   "products/fetchProducts",
   async (_, { rejectWithValue }) => {
     try {
+      const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+      const user_role = user?.role;
+      const user_id = user?.id;
+      const token = user?.token;
       const url = user_role === "SELLER"
         ? `/product?user_id=${user_id}`
         : "/product";
@@ -53,6 +52,10 @@ export const addProduct = createAsyncThunk<IExtendedProduct, FormData, { rejectV
   "products/addProduct",
   async (formData, { rejectWithValue }) => {
     try {
+      const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+      const user_role = user?.role;
+      const user_id = user?.id;
+      const token = user?.token;
       const response = await axiosInstance.post("/product", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -70,6 +73,10 @@ export const updateProduct = createAsyncThunk<IExtendedProduct, { id: number; fo
   "products/updateProduct",
   async ({ id, formData }, { rejectWithValue }) => {
     try {
+      const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+      const user_role = user?.role;
+      const user_id = user?.id;
+      const token = user?.token;
       const response = await axiosInstance.put(`/product?id=${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -86,6 +93,10 @@ export const deleteProduct = createAsyncThunk<void, number, { rejectValue: strin
   "products/deleteProduct",
   async (id, { rejectWithValue }) => {
     try {
+      const user = Cookies.get("user") ? JSON.parse(Cookies.get("user") || "") : null;
+      const user_role = user?.role;
+      const user_id = user?.id;
+      const token = user?.token;
       const response = await axiosInstance.delete(`/product?id=${id}`, {
         headers: {
           token: token
